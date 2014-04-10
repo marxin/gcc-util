@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Formats GNU GCC source files according to coding style: http://gcc.gnu.org/codingconventions.html
+astyle --style=gnu -s2 -xT8 -xn -xC80 $@

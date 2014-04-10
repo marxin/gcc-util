@@ -4,7 +4,7 @@
 # specified by the first parameter.
 
 if [ -z "$1" ] ; then
-    echo "Param missing. Usage __extr_testlogs destdir" >&2
+    echo "Param missing. Usage _extr_sums destdir" >&2
     exit 1
 fi
 

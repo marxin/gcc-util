@@ -1,0 +1,9 @@
+#!/bin/bash
+
+rm objdir -rf
+mkdir objdir
+cd objdir
+../configure --enable-languages=c,c++ --disable-bootstrap || exit 125
+
+make -j8 || exit 126
+./gcc/g++ -B ./gcc ~/Programming/testcases/bogus.c -c && cd .. && exit 0

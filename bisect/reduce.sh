@@ -1,6 +1,7 @@
 #!/bin/bash
 TESTCASE=${1:-testcase.i}
-g++ -c -O3 -Wfatal-errors -w $TESTCASE 2>&1 | grep -q 'internal compiler error: Segmentation fault'
+
+gcc -c -O2 -w $TESTCASE 2>&1 | grep -q ' internal compiler error: Segmentation fault'
 if ! test $? = 0; then
 exit 1
 fi

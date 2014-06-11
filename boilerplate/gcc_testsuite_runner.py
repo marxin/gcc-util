@@ -70,6 +70,7 @@ def compare_logs(folder, r1, r2):
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
 parser.add_option("-r", "--revision", dest="revision", help="git revision")
+parser.add_option("-p", "--parent-revision", dest="parent", help="parent git revision")
 parser.add_option("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
 parser.add_option("-b", "--bootstrap", action="store_true", dest="bootstrap", default=False, help = "process bootstrap")
 parser.add_option("-l", "--languages", dest="languages", help = "languages")
@@ -112,6 +113,9 @@ if r[0] != 0:
   err('Git revision of parent cannot be loaded')
 
 parent = r[1]
+
+if options.parent != None:
+  parent = options.parent
 
 r = commands.getstatusoutput('git checkout ' + options.revision)
 if r[0] != 0:

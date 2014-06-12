@@ -11,7 +11,7 @@ from optparse import OptionParser
 
 parallelism = 9
 make_cmd = 'make -j' + str(parallelism)
-make_test_cmd = 'make check -k -j' + str(parallelism) + ' RUNTESTFLAGS="ipa.exp"'
+make_test_cmd = 'make check -k -j' + str(parallelism)
 
 def err(message):
   log(message)

@@ -114,6 +114,10 @@ if r[0] != 0:
 
 parent = r[1]
 
+report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' + parent[:10] + '.log')
+
+log('Report file: ' + report_file)
+
 if options.parent != None:
   parent = options.parent
 
@@ -132,4 +136,8 @@ compile_and_test(options.folder, configure_cmd)
 extract_logs(options.folder, parent)
 
 diff = compare_logs(options.folder, options.revision, parent)
-log(diff)
+
+with open(report_file, 'w+') as f:
+  f.write(diff)
+
+f.close()

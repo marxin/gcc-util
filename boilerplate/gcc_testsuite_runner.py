@@ -115,13 +115,13 @@ if r[0] != 0:
 
 parent = r[1]
 
+if options.parent != None:
+  parent = options.parent
+
 report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' + parent[:10] + '.log')
 
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
-
-if options.parent != None:
-  parent = options.parent
 
 r = commands.getstatusoutput('git checkout ' + options.revision)
 if r[0] != 0:

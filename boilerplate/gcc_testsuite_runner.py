@@ -6,11 +6,11 @@ import subprocess
 import commands
 import shutil
 import datetime
-import psutil
+import multiprocessing
 
 from optparse import OptionParser
 
-parallelism = psutil.NUM_CPUS
+parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
 

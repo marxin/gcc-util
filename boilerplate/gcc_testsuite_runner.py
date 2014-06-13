@@ -6,10 +6,11 @@ import subprocess
 import commands
 import shutil
 import datetime
+import psutil
 
 from optparse import OptionParser
 
-parallelism = 9
+parallelism = psutil.NUM_CPUS
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
 
@@ -116,6 +117,7 @@ parent = r[1]
 
 report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' + parent[:10] + '.log')
 
+log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
 
 if options.parent != None:

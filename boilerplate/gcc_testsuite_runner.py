@@ -7,12 +7,28 @@ import commands
 import shutil
 import datetime
 import multiprocessing
+import signal
 
 from optparse import OptionParser
 
 parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
+
+to_cleanup = []
+
+def signal_handler(signum, frame):
+  log('Signal interrupt handler called')
+  process_cleanup()
+  exit(2)
+
+def process_cleanup():
+  global to_cleanup
+
+  for i in to_cleanup:
+    shutil.rmtree(i)
+
+  to_cleanup = []
 
 def err(message):
   log(message)
@@ -22,10 +38,40 @@ def log(message):
   d = str(datetime.datetime.now())
   print('[%s]: %s' % (d, message))
 
-def compile_and_test(folder, configure_cmd):
-  os.chdir(folder)
+def archive_git(target_folder, revision):
+  target_folder = os.path.join(target_folder, 'gcc_' + revision)
+  if not os.path.exists(target_folder):
+    os.makedirs(target_folder)
 
-  objdir = os.path.join(folder, 'objdir')
+  log('Git archive to: ' + target_folder)
+  cmd = 'git archive %s | tar -x -C %s' % (revision, target_folder)
+  to_cleanup.append(target_folder)
+  r = commands.getstatusoutput(cmd)
+  if r[0] != 0:
+    err('Could not git archive: ' + r[1])
+
+  r = commands.getstatusoutput('du -h %s | tail -n1' % (target_folder))
+  log('Folder size: ' + r[1])
+
+  return target_folder
+
+def prepare_revision(options, revision):
+  work_folder = options.folder
+
+  if options.temp != None:
+    work_folder = archive_git(options.temp, revision)
+  else:
+    log('Git checkout of: ' + revison)
+    r = commands.getstatusoutput('git checkout ' + revision)
+    if r[0] != 0:
+      err('Could not checkout to tested revision')
+
+  return work_folder
+
+def compile_and_test(workdir, configure_cmd):
+  os.chdir(workdir)
+
+  objdir = os.path.join(workdir, 'objdir')
   if os.path.exists(objdir):
     shutil.rmtree(objdir)
 
@@ -46,10 +92,10 @@ def compile_and_test(folder, configure_cmd):
   log('Test process has been started')
   r = commands.getstatusoutput(make_test_cmd)
 
-def extract_logs(folder, revision):
-  os.chdir(os.path.join(folder, 'objdir'))
+def extract_logs(workdir, gitdir, revision):
+  os.chdir(os.path.join(workdir, 'objdir'))
 
-  logs_folder = os.path.join(folder, 'logs', revision)
+  logs_folder = os.path.join(gitdir, 'logs', revision)
 
   if not os.path.exists(logs_folder):
     os.makedirs(logs_folder)
@@ -68,6 +114,8 @@ def compare_logs(folder, r1, r2):
 
   return r[1]
 
+signal.signal(signal.SIGINT, signal_handler)
+
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
 parser.add_option("-r", "--revision", dest="revision", help="git revision")
@@ -75,6 +123,7 @@ parser.add_option("-p", "--parent-revision", dest="parent", help="parent git rev
 parser.add_option("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
 parser.add_option("-b", "--bootstrap", action="store_true", dest="bootstrap", default=False, help = "process bootstrap")
 parser.add_option("-l", "--languages", dest="languages", help = "languages")
+parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 
 (options, args) = parser.parse_args()
 
@@ -123,16 +172,14 @@ report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' +
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
 
-r = commands.getstatusoutput('git checkout ' + options.revision)
-if r[0] != 0:
-  err('Could not checkout to tested revision')
+work_folder = prepare_revision(options, options.revision)
 
-compile_and_test(options.folder, configure_cmd)
-extract_logs(options.folder, options.revision)
+compile_and_test(work_folder, configure_cmd)
+extract_logs(options.folder, work_folder, options.revision)
 
-r = commands.getstatusoutput('git checkout ' + parent)
-if r[0] != 0:
-  err('Could not checkout to parent revision ' + parent)
+process_cleanup()
+
+work_folder = prepare_revision(options, parent)
 
 compile_and_test(options.folder, configure_cmd)
 extract_logs(options.folder, parent)
@@ -143,3 +190,5 @@ with open(report_file, 'w+') as f:
   f.write(diff)
 
 f.close()
+
+process_cleanup()

@@ -61,7 +61,7 @@ def prepare_revision(options, revision):
   if options.temp != None:
     work_folder = archive_git(options.temp, revision)
   else:
-    log('Git checkout of: ' + revison)
+    log('Git checkout of: ' + revision)
     r = commands.getstatusoutput('git checkout ' + revision)
     if r[0] != 0:
       err('Could not checkout to tested revision')

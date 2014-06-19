@@ -182,7 +182,7 @@ process_cleanup()
 work_folder = prepare_revision(options, parent)
 
 compile_and_test(options.folder, configure_cmd)
-extract_logs(options.folder, parent)
+extract_logs(options.folder, work_folder, parent)
 
 diff = compare_logs(options.folder, options.revision, parent)
 

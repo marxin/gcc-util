@@ -178,14 +178,14 @@ log('Report file: ' + report_file)
 work_folder = prepare_revision(options, options.revision)
 
 compile_and_test(work_folder, configure_cmd)
-extract_logs(options.folder, work_folder, options.revision)
+extract_logs(work_folder, options.folder, options.revision)
 
 process_cleanup()
 
 work_folder = prepare_revision(options, parent)
 
 compile_and_test(options.folder, configure_cmd)
-extract_logs(options.folder, work_folder, parent)
+extract_logs(work_folder, options.folder, parent)
 
 diff = compare_logs(options.folder, options.revision, parent)
 

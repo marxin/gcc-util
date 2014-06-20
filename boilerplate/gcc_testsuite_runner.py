@@ -13,7 +13,7 @@ from optparse import OptionParser
 
 parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
-make_test_cmd = 'make check -k -j' + str(parallelism)
+make_test_cmd = 'make check -k  RUNTESTFLAGS="dg.exp=ipa/*." -j' + str(parallelism)
 
 to_cleanup = []
 

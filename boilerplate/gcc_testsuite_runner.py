@@ -57,6 +57,7 @@ def archive_git(target_folder, revision):
 
 def prepare_revision(options, revision):
   work_folder = options.folder
+  os.chdir(work_folder)
 
   if options.temp != None:
     work_folder = archive_git(options.temp, revision)
@@ -106,9 +107,11 @@ def extract_logs(workdir, gitdir, revision):
 
 def compare_logs(folder, r1, r2):
   f1 = os.path.join(folder, 'logs', r1)
+  os.chdir(f1)
+
   f2 = os.path.join(folder, 'logs', r2)
 
-  r = commands.getstatusoutput('_compare_sums %s %s' % (f1, f2))
+  r = commands.getstatusoutput('_compare_sums %s' % (f2))
   if r[0] != 0:
     err('Could not compare logs: ' + r[1])
 

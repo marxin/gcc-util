@@ -155,7 +155,7 @@ log('Built configure options: ' + configure_cmd)
 
 os.chdir(options.folder)
 
-log('Pulling repository')
+log('Fetching repository')
 r = commands.getstatusoutput('git fetch--all')
 
 if r[0] != 0:

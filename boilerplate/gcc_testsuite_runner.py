@@ -156,7 +156,7 @@ log('Built configure options: ' + configure_cmd)
 os.chdir(options.folder)
 
 log('Fetching repository')
-r = commands.getstatusoutput('git fetch--all')
+r = commands.getstatusoutput('git fetch --all')
 
 if r[0] != 0:
   err('Git fetch has failed')

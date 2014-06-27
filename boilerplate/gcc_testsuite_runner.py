@@ -156,10 +156,10 @@ log('Built configure options: ' + configure_cmd)
 os.chdir(options.folder)
 
 log('Pulling repository')
-r = commands.getstatusoutput('git pull --all')
+r = commands.getstatusoutput('git fetch--all')
 
 if r[0] != 0:
-  err('Git pull has failed')
+  err('Git fetch has failed')
 
 r = commands.getstatusoutput('git show ' + options.revision)
 

@@ -155,6 +155,12 @@ log('Built configure options: ' + configure_cmd)
 
 os.chdir(options.folder)
 
+log('Pulling repository')
+r = commands.getstatusoutput('git pull')
+
+if r[0] != 0:
+  err('Git pull has failed')
+
 r = commands.getstatusoutput('git show ' + options.revision)
 
 if r[0] != 0:
@@ -174,12 +180,6 @@ report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' +
 
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
-
-log('Pulling repository')
-r = commands.getstatusoutput('git pull')
-
-if r[0] != 0:
-  err('Git has failed')
 
 work_folder = prepare_revision(options, options.revision)
 

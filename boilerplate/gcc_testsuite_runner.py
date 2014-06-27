@@ -175,6 +175,12 @@ report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' +
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
 
+log('Pulling repository')
+r = commands.getstatusoutput('git pull')
+
+if r[0] != 0:
+  err('Git has failed')
+
 work_folder = prepare_revision(options, options.revision)
 
 compile_and_test(work_folder, configure_cmd)

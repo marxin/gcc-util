@@ -156,7 +156,7 @@ log('Built configure options: ' + configure_cmd)
 os.chdir(options.folder)
 
 log('Pulling repository')
-r = commands.getstatusoutput('git pull')
+r = commands.getstatusoutput('git pull --all')
 
 if r[0] != 0:
   err('Git pull has failed')

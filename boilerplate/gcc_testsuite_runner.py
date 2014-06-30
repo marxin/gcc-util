@@ -105,11 +105,7 @@ def extract_logs(workdir, gitdir, revision):
   if r[0] != 0:
     err('Could not extract sums: ' + r[1])
 
-  r = commands.getstatusoutput('_extr_logs ' + logs_folder)
-  if r[0] != 0:
-    err('Could not extract logs: ' + r[1])
-
-def compare_logs(folder, r1, r2):
+def compare_ogs(folder, r1, r2):
   f1 = os.path.join(folder, 'logs', r1)
   os.chdir(f1)
 

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Copy all .log files in all subdirectories in to the directory
+# specified by the first parameter.
+
+if [ -z "$1" ] ; then
+    echo "Param missing. Usage _extr_logs destdir" >&2
+    exit 1
+fi
+
+cp -v `find . -name '*.log' -print` $1

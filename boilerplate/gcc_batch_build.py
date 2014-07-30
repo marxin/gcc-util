@@ -14,6 +14,8 @@ from argparse import ArgumentParser
 targets = 'aarch64-elf aarch64-linux-gnu \
   alpha-linux-gnu alpha-freebsd6 alpha-netbsd alpha-openbsd \
   alpha64-dec-vms alpha-dec-vms am33_2.0-linux \
+  arc-elf32OPT-with-cpu=arc600 arc-elf32OPT-with-cpu=arc700 \
+  arc-linux-uclibcOPT-with-cpu=arc700 arceb-linux-uclibcOPT-with-cpu=arc700 \
   arm-wrs-vxworks arm-netbsdelf \
   arm-linux-androideabi arm-uclinux_eabi arm-eabi \
   arm-symbianelf avr-rtems avr-elf \
@@ -119,6 +121,8 @@ failures = []
 
 for (i, v) in enumerate(options.targets):  
   log('configure: %s [%u/%u]' % (v, i + 1, len(options.targets)))
+  tokens = v.split('OPT')
+  target = tokens[0]
 
   folder = os.path.join(options.destination, v)
 
@@ -128,7 +132,7 @@ for (i, v) in enumerate(options.targets):
   os.chdir(folder)
 
   configure_location = os.path.join(options.folder, 'configure')
-  r = commands.getstatusoutput(configure_location + ' ' + configure_options + ' --target=' + v)
+  r = commands.getstatusoutput(configure_location + ' ' + configure_options + ' --target=' + target + ' ' + ' '.join(tokens[1:]))
 
   if r[0] != 0:
     err('Configuration failed: %s' % (r[1]))

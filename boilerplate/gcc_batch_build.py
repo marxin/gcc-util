@@ -9,7 +9,7 @@ import datetime
 import multiprocessing
 import signal
 
-from argparse import ArgumentParser
+from optparse import OptionParser
 
 targets = 'aarch64-elf aarch64-linux-gnu \
   alpha-linux-gnu alpha-freebsd6 alpha-netbsd alpha-openbsd \
@@ -90,15 +90,15 @@ def log(message):
 
 frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada': 'gnat1', 'go': 'go1', 'java': 'jc1', 'objc': 'cc1obj', 'obj-c++': 'cc1plusobj'  }
 
-parser = ArgumentParser()
-parser.add_argument("-f", "--folder", dest="folder", help="git repository folder")
-parser.add_argument("-d", "--destination", dest="destination", help = "destination folder")
-parser.add_argument("-l", "--languages", dest="languages", help = "languages")
-parser.add_argument("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
-parser.add_argument("-s", "--subset", action="store_true", dest="subset", default=False, help = "subset of targets")
-parser.add_argument("-t", "--targets", dest="targets", default = all_targets, type = str, nargs = '+', help = "targets")
+parser = OptionParser()
+parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
+parser.add_option("-d", "--destination", dest="destination", help = "destination folder")
+parser.add_option("-l", "--languages", dest="languages", help = "languages")
+parser.add_option("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
+parser.add_option("-s", "--subset", action="store_true", dest="subset", default=False, help = "subset of targets")
+parser.add_option("-t", "--targets", dest="targets", default = ','.join(all_targets), help = "targets")
 
-options = parser.parse_args()
+(options,args) = parser.parse_args()
 
 if not options.folder:
   parser.error('folder not specified')
@@ -111,6 +111,8 @@ if not os.path.exists(options.destination):
 
 if options.languages.find('all') != -1:
   options.languages = options.languages.replace('all', ','.join(frontends.keys()))
+
+options.targets = options.targets.split(',')
 
 if options.subset:
   subset = map(lambda x: x.split('-')[0], options.targets)

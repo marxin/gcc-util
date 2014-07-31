@@ -135,6 +135,7 @@ log('Built configure options: ' + configure_options)
 failures = []
 targets = options.targets
 # targets = filter(lambda x: x.startswith('rs6000'), options.targets)
+# targets = filter(lambda x: x.startswith('mmix-knuth-mmixware'), options.targets)
 
 for (i, v) in enumerate(targets):
   log('configure: %s [%u/%u]' % (v, i + 1, len(targets)))
@@ -149,10 +150,21 @@ for (i, v) in enumerate(targets):
   os.chdir(folder)
 
   configure_location = os.path.join(options.folder, 'configure')
-  r = commands.getstatusoutput(configure_location + ' ' + configure_options + ' --target=' + target + ' ' + ' '.join(tokens[1:]))
+  configure_command = configure_location + ' ' + configure_options + ' --target=' + target + ' ' + ' '.join(tokens[1:])
+  r = commands.getstatusoutput(configure_command)
 
   if r[0] != 0:
-    err('Configuration failed: %s' % (r[1]))
+    lines = r[1].split('\n')
+    if lines[-1].strip().startswith('Supported languages are'):
+      log('Unsupported language, trying to reconfigure..')
+      possible = ','.join(set(lines[-1].split(':')[-1].strip().split(',')))
+      configure_command = configure_command + ' --enable-languages=' + possible
+      r = commands.getstatusoutput(configure_command)
+    else:
+      err('Configuration failed: %s' % (r[1]))
+
+    if r[0] != 0:
+      err('Configuration failed: %s' % (r[1]))
 
   log('building: %s [%u/%u]' % (v, i + 1, len(targets)))
 

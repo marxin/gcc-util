@@ -88,7 +88,10 @@ def log(message):
   d = str(datetime.datetime.now())
   print('[%s]: %s' % (d, message))
 
-frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada': 'gnat1', 'go': 'go1', 'java': 'jc1', 'objc': 'cc1obj', 'obj-c++': 'cc1objplus'  }
+def parse_languages(languages):
+  return ','.join(set([x for x in languages.split(',') if x != 'lto']))
+
+frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada': 'gnat1', 'go': 'go1', 'java': 'jc1', 'objc': 'cc1obj', 'obj-c++': 'cc1objplus', 'java': 'jc1' }
 
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
@@ -152,12 +155,14 @@ for (i, v) in enumerate(targets):
   configure_location = os.path.join(options.folder, 'configure')
   configure_command = configure_location + ' ' + configure_options + ' --target=' + target + ' ' + ' '.join(tokens[1:])
   r = commands.getstatusoutput(configure_command)
+  enabled_languages = options.languages
 
   if r[0] != 0:
     lines = r[1].split('\n')
     if lines[-1].strip().startswith('Supported languages are'):
-      log('Unsupported language, trying to reconfigure..')
-      possible = ','.join(set(lines[-1].split(':')[-1].strip().split(',')))
+      possible = parse_languages(lines[-1].split(':')[-1].strip())
+      log('Unsupported language, trying to reconfigure for language subset: ' + possible)
+      enabled_languages = possible.split(',')
       configure_command = configure_command + ' --enable-languages=' + possible
       r = commands.getstatusoutput(configure_command)
     else:
@@ -171,7 +176,7 @@ for (i, v) in enumerate(targets):
   r = commands.getstatusoutput(make_cmd)
   log('Make exited with: %u' % r[0])
 
-  matches = filter(lambda x: not x[1], map(lambda x: (x, os.path.exists(os.path.join('gcc', frontends[x]))), options.languages))
+  matches = filter(lambda x: not x[1], map(lambda x: (x, os.path.exists(os.path.join('gcc', frontends[x]))), enabled_languages))
   missing_fe = ' '.join(map(lambda x: x[0], matches))
 
   if any(matches):

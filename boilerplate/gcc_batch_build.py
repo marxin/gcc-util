@@ -78,7 +78,7 @@ targets = 'aarch64-elf aarch64-linux-gnu \
 
 all_targets = [x for x in targets.split(' ') if x]
 parallelism = multiprocessing.cpu_count()
-make_cmd = 'make -j' + str(parallelism)
+make_cmd = 'make -k -j' + str(parallelism)
 
 def err(message):
   log(message)
@@ -87,6 +87,8 @@ def err(message):
 def log(message):
   d = str(datetime.datetime.now())
   print('[%s]: %s' % (d, message))
+
+frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada': 'gnat1', 'go': 'go1', 'java': 'jc1', 'objc': 'cc1obj', 'obj-c++': 'cc1plusobj'  }
 
 parser = ArgumentParser()
 parser.add_argument("-f", "--folder", dest="folder", help="git repository folder")
@@ -106,6 +108,9 @@ if not options.destination:
 
 if not os.path.exists(options.destination):
   os.mkdir(options.destination)
+
+if options.languages.find('all') != -1:
+  options.languages = options.languages.replace('all', ','.join(frontends.keys()))
 
 if options.subset:
   subset = map(lambda x: x.split('-')[0], options.targets)
@@ -148,10 +153,12 @@ for (i, v) in enumerate(targets):
   log('building: %s [%u/%u]' % (v, i + 1, len(targets)))
 
   r = commands.getstatusoutput(make_cmd)
-  e = os.path.exists('gcc/cc1')
-  log('CC1: %s, exited with: %u' % ('OK' if e else 'FAILED', r[0]))
+  log('Make exited with: %u' % r[0])
 
-  if not e:
+  matches = filter(lambda x: not x[1], map(lambda x: (x, os.path.exists(os.path.join('gcc', x))), options.languages))
+  missing_fe = ' '.join(map(lambda x: x[0]))
+
+  if any(matches):
     failures.append(v)
 
   if not os.path.exists('../logs'):
@@ -160,7 +167,7 @@ for (i, v) in enumerate(targets):
   with open(os.path.join('../logs', v + '.log'), "w") as text_file:
     text_file.write(r[1])
 
-  if e:
+  if not any(matches):
     shutil.rmtree(folder)
 
 log('Wrong configurations: ' + str(failures))

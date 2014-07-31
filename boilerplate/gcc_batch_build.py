@@ -158,7 +158,7 @@ for (i, v) in enumerate(targets):
   log('Make exited with: %u' % r[0])
 
   matches = filter(lambda x: not x[1], map(lambda x: (x, os.path.exists(os.path.join('gcc', x))), options.languages))
-  missing_fe = ' '.join(map(lambda x: x[0]))
+  missing_fe = ' '.join(map(lambda x: x[0], matches))
 
   if any(matches):
     failures.append(v)

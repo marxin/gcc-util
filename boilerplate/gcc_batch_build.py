@@ -93,7 +93,7 @@ frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
 parser.add_option("-d", "--destination", dest="destination", help = "destination folder")
-parser.add_option("-l", "--languages", dest="languages", help = "languages")
+parser.add_option("-l", "--languages", dest="languages", help = "languages", default = 'all')
 parser.add_option("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
 parser.add_option("-s", "--subset", action="store_true", dest="subset", default=False, help = "subset of targets")
 parser.add_option("-t", "--targets", dest="targets", default = ','.join(all_targets), help = "targets")
@@ -128,6 +128,8 @@ if not options.checking:
 if options.languages != None:
   configure_options = configure_options + ' --enable-languages=' + options.languages
 
+options.languages = options.languages.split(',')
+
 log('Built configure options: ' + configure_options)
 
 failures = []
@@ -157,12 +159,13 @@ for (i, v) in enumerate(targets):
   r = commands.getstatusoutput(make_cmd)
   log('Make exited with: %u' % r[0])
 
-  matches = filter(lambda x: not x[1], map(lambda x: (x, os.path.exists(os.path.join('gcc', x))), options.languages))
+  matches = filter(lambda x: not x[1], map(lambda x: (x, os.path.exists(os.path.join('gcc', frontends[x]))), options.languages))
   missing_fe = ' '.join(map(lambda x: x[0], matches))
 
   if any(matches):
     failures.append(v)
-    log(missing_fe)
+    msg = 'Missing FE: %s (%u/%u)' % (missing_fe, len(matches), len(frontends))
+    log(msg)
 
   if not os.path.exists('../logs'):
     os.mkdir('../logs')

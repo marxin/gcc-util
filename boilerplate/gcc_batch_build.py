@@ -88,7 +88,7 @@ def log(message):
   d = str(datetime.datetime.now())
   print('[%s]: %s' % (d, message))
 
-frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada': 'gnat1', 'go': 'go1', 'java': 'jc1', 'objc': 'cc1obj', 'obj-c++': 'cc1plusobj'  }
+frontends = { 'c': 'cc1', 'c++': 'cc1plus', 'go': 'go1', 'fortran': 'f951', 'ada': 'gnat1', 'go': 'go1', 'java': 'jc1', 'objc': 'cc1obj', 'obj-c++': 'cc1objplus'  }
 
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")

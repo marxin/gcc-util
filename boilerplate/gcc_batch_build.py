@@ -162,6 +162,7 @@ for (i, v) in enumerate(targets):
 
   if any(matches):
     failures.append(v)
+    log(missing_fe)
 
   if not os.path.exists('../logs'):
     os.mkdir('../logs')

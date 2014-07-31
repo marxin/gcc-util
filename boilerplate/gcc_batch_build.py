@@ -124,9 +124,11 @@ if options.languages != None:
 log('Built configure options: ' + configure_options)
 
 failures = []
+targets = options.targets
+# targets = filter(lambda x: x.startswith('rs6000'), options.targets)
 
-for (i, v) in enumerate(options.targets):  
-  log('configure: %s [%u/%u]' % (v, i + 1, len(options.targets)))
+for (i, v) in enumerate(targets):
+  log('configure: %s [%u/%u]' % (v, i + 1, len(targets)))
   tokens = v.split('OPT')
   target = tokens[0]
 
@@ -143,7 +145,7 @@ for (i, v) in enumerate(options.targets):
   if r[0] != 0:
     err('Configuration failed: %s' % (r[1]))
 
-  log('building: %s [%u/%u]' % (v, i + 1, len(options.targets)))
+  log('building: %s [%u/%u]' % (v, i + 1, len(targets)))
 
   r = commands.getstatusoutput(make_cmd)
   e = os.path.exists('gcc/cc1')
@@ -158,6 +160,7 @@ for (i, v) in enumerate(options.targets):
   with open(os.path.join('../logs', v + '.log'), "w") as text_file:
     text_file.write(r[1])
 
-  shutil.rmtree(folder)
+  if e:
+    shutil.rmtree(folder)
 
 log('Wrong configurations: ' + str(failures))

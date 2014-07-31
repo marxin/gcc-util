@@ -93,6 +93,7 @@ parser.add_argument("-f", "--folder", dest="folder", help="git repository folder
 parser.add_argument("-d", "--destination", dest="destination", help = "destination folder")
 parser.add_argument("-l", "--languages", dest="languages", help = "languages")
 parser.add_argument("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
+parser.add_argument("-s", "--subset", action="store_true", dest="subset", default=False, help = "subset of targets")
 parser.add_argument("-t", "--targets", dest="targets", default = all_targets, type = str, nargs = '+', help = "targets")
 
 options = parser.parse_args()
@@ -105,6 +106,11 @@ if not options.destination:
 
 if not os.path.exists(options.destination):
   os.mkdir(options.destination)
+
+if options.subset:
+  subset = map(lambda x: x.split('-')[0], options.targets)
+  prefixes = (set(subset))
+  options.targets= map(lambda x: filter(lambda y: y.startswith(x), options.targets)[0], prefixes)
 
 # build of configure command line
 configure_options = '--disable-bootstrap'

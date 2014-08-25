@@ -181,7 +181,7 @@ for (i, v) in enumerate(targets):
 
   if any(matches):
     failures.append(v)
-    msg = 'Missing FE: %s (%u/%u)' % (missing_fe, len(matches), len(frontends))
+    msg = 'Missing FE: %s (%u/%u)' % (missing_fe, len(matches), len(enabled_languages))
     log(msg)
 
   if not os.path.exists('../logs'):

@@ -140,10 +140,14 @@ class Function:
     print('\n'.join(self.lines))
 
 class DumpFile:
-  def __init__(self, text):
+  def __init__(self, text, single_function):
     self.lines = text.strip().split('\n')
     self.trim_lines()
-    self.parse_functions()
+
+    if single_function:
+      self.functions = [Function('__function_name__', '__function_name__', self.lines)]
+    else:      
+      self.parse_functions()
 
   @staticmethod
   def line_filter(line):
@@ -208,9 +212,11 @@ class DumpFile:
           r = f == target
           if not r:        
             if not f.difference(target):
-              f1.write('Name: ' + f.mangled + '\n')
+              f1.write('Name: ' + f.name+ '\n')
+              f1.write('Mangled: ' + f.mangled + '\n')
               f1.write('\n'.join(f.lines) + '\n')
-              f2.write('Name: ' + target.mangled + '\n')
+              f2.write('Name: ' + target.name+ '\n')
+              f2.write('Mangled: ' + target.mangled + '\n')
               f2.write('\n'.join(target.lines) + '\n')
 
   def dump(self):
@@ -218,9 +224,10 @@ class DumpFile:
 
 f1 = sys.argv[1]
 f2 = sys.argv[2]
+single_function = len(sys.argv) >= 4
 
-d1 = DumpFile(open(f1).read())
-d2 = DumpFile(open(f2).read())
+d1 = DumpFile(open(f1).read(), single_function)
+d2 = DumpFile(open(f2).read(), single_function)
 
 d1.compare(d2)
 

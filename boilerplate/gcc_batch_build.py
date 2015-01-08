@@ -140,6 +140,8 @@ targets = options.targets
 # targets = filter(lambda x: x.startswith('rs6000'), options.targets)
 # targets = filter(lambda x: x.startswith('mmix-knuth-mmixware'), options.targets)
 
+options.destination = os.path.abspath(options.destination)
+
 for (i, v) in enumerate(targets):
   log('configure: %s [%u/%u]' % (v, i + 1, len(targets)))
   tokens = v.split('OPT')

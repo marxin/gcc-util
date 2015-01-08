@@ -46,13 +46,20 @@ class Patch:
     text = list(takewhile(lambda x: x.rstrip() != '---', [x.rstrip() for x in open(args.file).readlines()]))
     subjects = [x for x in text if x.startswith('Subject')]
     if len(subjects):
-      self.subject = subjects[0].split(':')[-1].strip()
+      self.subject = self.trim_subject(subjects[0].split(':')[-1].strip())
 
     if args.message:
       self.subject = args.message
 
     self.entries = Patch.parse_lines(text, args)
     self.directory = args.directory
+
+  def trim_subject (self, subject):
+    i = subject.rfind(']')
+    if i != -1:
+      subject = subject[(i + 1):].strip()
+
+    return subject
 
   def add_entries(self):
     for entry in self.entries:

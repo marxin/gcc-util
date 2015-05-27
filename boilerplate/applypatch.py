@@ -42,11 +42,13 @@ class Patch:
       return results
 
   def __init__(self, args):
+    self.patch_path = args.file
     self.subject =  None
     text = list(takewhile(lambda x: x.rstrip() != '---', [x.rstrip() for x in open(args.file).readlines()]))
-    subjects = [x for x in text if x.startswith('Subject')]
+    s = 'Subject:'
+    subjects = [x for x in text if x.startswith(s)]
     if len(subjects):
-      self.subject = self.trim_subject(subjects[0].split(':')[-1].strip())
+      self.subject = self.trim_subject(subjects[0][len(s):].strip())
 
     if args.message:
       self.subject = args.message
@@ -76,6 +78,10 @@ class Patch:
       print(bodies, file = log)
 
     print('SVN commit file has been created: %s' % fullname)
+
+  def apply_patch(self):
+    input = open(self.patch_path)
+    subprocess.check_output(['patch', '-p1'], stdin = input)
 
 class ChangeLogEntry:
   def __init__(self, file, lines, args):
@@ -115,9 +121,13 @@ parser.add_argument("-f", "--file", dest="file", help="file with patch", require
 parser.add_argument("-u", "--username", dest="username", help = "commit username")
 parser.add_argument("-e", "--email", dest="email", help = "commit email address")
 parser.add_argument("-m", "--message", dest="message", help = "commit message header")
+parser.add_argument('-s', dest='skip_patch', action='store_true')
 
 args = parser.parse_args()
 patch = Patch(args)
+
+if not args.skip_patch:
+    patch.apply_patch()
 
 patch.add_entries()
 patch.create_svn_log()

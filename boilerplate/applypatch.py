@@ -23,23 +23,23 @@ def strip_array(condition, lines):
 class Patch:
   @staticmethod
   def parse_lines(text, args):
-      results = []
-      lines = []
+    results = []
+    lines = []
 
-      f = None
-      for line in text:
-	if line.endswith('ChangeLog:'):
-	  if f != None:
-	    results.append(ChangeLogEntry(f, lines, args))
-	  f = line.rstrip(':')	  
-	  lines = []
-	else:
-	  lines.append(line)
+    f = None
+    for line in text:
+      if line.endswith('ChangeLog:'):
+        if f != None:
+          results.append(ChangeLogEntry(f, lines, args))
+        f = line.rstrip(':')
+        lines = []
+      else:
+        lines.append(line)
 
-      if f != None:
-	results.append(ChangeLogEntry(f, lines, args))
+    if f != None:
+      results.append(ChangeLogEntry(f, lines, args))
 
-      return results
+    return results
 
   def __init__(self, args):
     self.patch_path = args.file
@@ -87,6 +87,9 @@ class ChangeLogEntry:
   def __init__(self, file, lines, args):
     self.file = file
 
+    if args.branch != None:
+        self.file += '.' + args.branch
+
     lines = strip_array(lambda x: x.strip() == '', lines)
     first = lines[0]
     tokens = first.split(' ')
@@ -108,10 +111,10 @@ class ChangeLogEntry:
       text = original.read()
       with file(filename, 'w') as f:        
         print(self.get_header(), file = f)
-	print(file = f)
-	print(self.get_body(), file = f)
-	print(file = f)
-	f.write(text)
+        print(file = f)
+        print(self.get_body(), file = f)
+        print(file = f)
+        f.write(text)
 
     print('ChangeLog entry added: %s' % self.file)
 
@@ -121,6 +124,7 @@ parser.add_argument("-f", "--file", dest="file", help="file with patch", require
 parser.add_argument("-u", "--username", dest="username", help = "commit username")
 parser.add_argument("-e", "--email", dest="email", help = "commit email address")
 parser.add_argument("-m", "--message", dest="message", help = "commit message header")
+parser.add_argument("-b", "--branch", dest="branch", help = "SVN branch name")
 parser.add_argument('-s', dest='skip_patch', action='store_true')
 
 args = parser.parse_args()

@@ -138,6 +138,7 @@ class GccTester:
 
     def prepare_revision(self, revision):
       os.chdir(self.folder)
+      work_dir = self.folder
 
       if self.temp != None:
         work_folder = self.archive_git(revision)

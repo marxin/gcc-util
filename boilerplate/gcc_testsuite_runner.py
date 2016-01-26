@@ -19,165 +19,221 @@ parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
 
-to_cleanup = []
-all_messages = []
-
-def signal_handler(signum, frame):
-  log('Signal interrupt handler called')
-  process_cleanup()
-  exit(2)
-
-def process_cleanup():
-  global to_cleanup
-
-  for i in to_cleanup:
-    shutil.rmtree(i)
-
-  to_cleanup = []
-
 def tail(message):
   lines = message.split('\n')
   return '\n'.join(lines[-50:])
 
-def err(message):
-  global revision
-  global parent
-  log('\n' + tail(message))
-  send_email(all_messages, revision, parent, True)
-  exit(1)
+class GccTester:
+    def __init__(self, revision, options):
+        self.folder = options.folder
+        self.temp = options.temp
+        self.revision = revision
+        self.messages = []
+        self.configure_cmd = ['../configure']
+        self.to_cleanup = []
 
-def log(message, add_time = True):
-  s = message
-  if add_time:
-    d = str(datetime.datetime.now())
-    s = '[%s]: %s' % (d, message)
-  print(s)
-  global all_messages
-  all_messages += [s]
+        # TODO: remove
+        self.configure_cmd += ['--disable-bootstrap', '--enable-checking=release', '--enable-languages=c,c++']
 
-def archive_git(target_folder, revision):
-  target_folder = os.path.join(target_folder, 'gcc_' + revision)
-  if not os.path.exists(target_folder):
-    os.makedirs(target_folder)
+        os.chdir(self.folder)
 
-  log('Git archive to: ' + target_folder)
-  cmd = 'git archive %s | tar -x -C %s' % (revision, target_folder)
-  to_cleanup.append(target_folder)
-  r = commands.getstatusoutput(cmd)
-  if r[0] != 0:
-    err('Could not git archive: ' + r[1])
+        self.log('Fetching repository')
+        r = commands.getstatusoutput('git fetch --all')
 
-  r = commands.getstatusoutput('du -h %s | tail -n1' % (target_folder))
-  log('Folder size: ' + r[1])
+        if r[0] != 0:
+            self.err('Git fetch has failed')
 
-  return target_folder
+        self.revision = self.get_sha1_for_revision(self.revision)
+        self.parent = self.get_sha1_for_revision(self.revision + '^')
+        if options.parent != None:
+          self.parent = get_sha1_for_revision(self.parent)
 
-def prepare_revision(options, revision):
-  work_folder = options.folder
-  os.chdir(work_folder)
+        self.revision_log_message = self.get_log_message(revision)
+        self.parent_log_message = self.get_log_message(self.parent)
 
-  if options.temp != None:
-    work_folder = archive_git(options.temp, revision)
-  else:
-    log('Git checkout of: ' + revision)
-    r = commands.getstatusoutput('git checkout ' + revision)
-    if r[0] != 0:
-      err('Could not checkout to tested revision')
+        # create folders
+        self.tester_folder = os.path.join(self.folder, 'tester')
+        self.logs_folder = os.path.join(self.tester_folder, 'logs')
+        self.reports_folder = os.path.join(self.tester_folder, 'reports')
 
-  return work_folder
+        if not os.path.exists(self.logs_folder):
+            os.makedirs(self.logs_folder)
+        if not os.path.exists(self.reports_folder):
+            os.makedirs(self.reports_folder)
 
-def compile_and_test(workdir, configure_cmd):
-  os.chdir(workdir)
+        self.report_file = os.path.join(self.reports_folder, self.revision + '_' + self.parent + '.log')
 
-  objdir = os.path.join(workdir, 'objdir')
-  if os.path.exists(objdir):
-    shutil.rmtree(objdir)
+        self.log('Paralellism: ' + str(parallelism))
+        self.log('Report file: ' + self.report_file)
 
-  os.makedirs(objdir)
-  log('Creating: %s' % objdir)
+    def process_revision(self, revision, configure_cmd):
+        self.log('Processing revision: %s' % revision)
+        if os.path.exists(os.path.join(self.logs_folder, revision)):
+            self.log('Skipping build, already in log cache')
+        else:
+            work_folder = self.prepare_revision(revision)
+            self.compile_and_test(work_folder, configure_cmd)
+            self.extract_logs(work_folder, revision)
 
-  log('Changing chroot to folder:' + objdir)
-  os.chdir(objdir)
+    def log(self, message, add_time = True):
+        s = message
+        if add_time:
+            d = str(datetime.datetime.now())
+            s = '[%s]: %s' % (d, message)
+        print(s)
 
-  log('Configure process has been started')
-  r = commands.getstatusoutput(' '.join(configure_cmd))
-  if r[0] != 0:
-    err('Could not configure GCC: ' + r[1])
+        self.messages += [s]
 
-  log('Build process has been started')
-  r = commands.getstatusoutput(make_cmd)
+    def err(self, message):
+        self.log('\n' + tail(message))
+        self.send_email(True)
+        exit(1)
 
-  if r[0] != 0:
-    err('Could not build GCC: ' + r[1])
+    def process_cleanup():
+        for i in self.to_cleanup:
+            shutil.rmtree(i)
 
-  log('Test process has been started')
-  r = commands.getstatusoutput(make_test_cmd)
+        self.to_cleanup = []
 
-def extract_logs(workdir, logs_root, revision):
-  objdir = os.path.join(workdir, 'objdir')
-  os.chdir(objdir)
+    def get_sha1_for_revision(self, revision):
+        return subprocess.check_output(['git', 'rev-parse', revision]).strip()
 
-  logs_folder = os.path.join(logs_root, revision)
+    def get_log_message(self, revision):
+        return subprocess.check_output(['git', 'log', '-n1', revision]).strip()
 
-  if not os.path.exists(logs_folder):
-    os.makedirs(logs_folder)
+    def send_email(self, failure = False):
+        msg = MIMEMultipart("alternative")
 
-  r = commands.getstatusoutput('_extr_sums ' + logs_folder)
-  if r[0] != 0:
-    err('Could not extract sums: ' + r[1])
+        text = '\n'.join(self.messages)
+        text = MIMEText(text, "plain", "utf-8")
+        msg.attach(text)
 
-  os.chdir(os.path.join(objdir, 'gcc', 'testsuite'))
+        sender = 'mliska+tester@suse.cz'
+        recipient = 'mliska@suse.cz'
 
-  r = commands.getstatusoutput('_extr_logs ' + logs_folder)
-  if r[0] != 0:
-    err('Could not extract logs: ' + r[1])
+        msg['Subject'] = 'GCC tester email: %s (%s vs. %s)' % ('FAILURE' if failure else 'SUCCESS', self.revision, self.parent)
+        msg['From'] = sender
+        msg['To'] = recipient
 
-  os.chdir(objdir)
+        s = smtplib.SMTP('localhost')
+        s.sendmail(sender, [recipient], msg.as_string())
+        s.quit()
 
-def compare_logs(logs_folder, report_folder, r1, r2):
-  f1 = os.path.join(logs_folder, r1)
-  os.chdir(f1)
+    def archive_git(self, revision):
+        target_folder = os.path.join(self.folder, 'gcc_' + revision)
+        if not os.path.exists(target_folder):
+            os.makedirs(target_folder)
 
-  f2 = os.path.join(logs_folder, r2)
+        self.log('Git archive to: ' + target_folder)
+        cmd = 'git archive %s | tar -x -C %s' % (revision, target_folder)
+        self.to_cleanup.append(target_folder)
+        r = commands.getstatusoutput(cmd)
+        if r[0] != 0:
+            self.err('Could not git archive: ' + r[1])
 
-  r = commands.getstatusoutput('_compare_sums %s' % (f2))
-  if r[0] != 0:
-    err('Could not compare logs: ' + r[1])
+        r = commands.getstatusoutput('du -h %s | tail -n1' % (target_folder))
+        self.log('Folder size: ' + r[1])
 
-  return r[1]
+        return target_folder
 
-def get_sha1_for_revision(revision):
-    return subprocess.check_output(['git', 'rev-parse', revision]).strip()
+    def prepare_revision(self, revision):
+      os.chdir(self.folder)
 
-def get_log_message(revision):
-    return subprocess.check_output(['git', 'log', '-n1', revision]).strip()
+      if self.temp != None:
+        work_folder = self.archive_git(revision)
+      else:
+        log('Git checkout of: ' + revision)
+        r = commands.getstatusoutput('git checkout ' + revision)
+        if r[0] != 0:
+          self.err('Could not checkout to tested revision')
 
-def send_email(messages, revision, parent, failure = False):
-    msg = MIMEMultipart("alternative")
+      return work_folder
 
-    text = '\n'.join(messages)
-    text = MIMEText(text, "plain", "utf-8")
-    msg.attach(text)
+    def compile_and_test(self, workdir, configure_cmd):
+        os.chdir(workdir)
 
-    sender = 'mliska+tester@suse.cz'
-    recipient = 'mliska@suse.cz'
+        objdir = os.path.join(workdir, 'objdir')
+        if os.path.exists(objdir):
+            shutil.rmtree(objdir)
 
-    msg['Subject'] = 'GCC tester email: %s (%s vs. %s)' % ('FAILURE' if failure else 'SUCCESS', revision, parent)
-    msg['From'] = sender
-    msg['To'] = recipient
+        os.makedirs(objdir)
+        self.log('Creating: %s' % objdir)
 
-    s = smtplib.SMTP('localhost')
-    s.sendmail(sender, [recipient], msg.as_string())
-    s.quit()
+        self.log('Changing chroot to folder:' + objdir)
+        os.chdir(objdir)
 
-def process_revision(revision, options, logs_folder, configure_cmd):
-    log('Processing revision: %s' % revision)
-    if os.path.exists(os.path.join(logs_folder, revision)):
-        log('Skipping build, already in log cache')
-    else:
-        work_folder = prepare_revision(options, revision)
-        compile_and_test(work_folder, configure_cmd)
-        extract_logs(work_folder, logs_folder, revision)
+        self.log('Configure process has been started')
+        r = commands.getstatusoutput(' '.join(configure_cmd))
+        if r[0] != 0:
+            self.err('Could not configure GCC: ' + r[1])
+
+        self.log('Build process has been started')
+        r = commands.getstatusoutput(make_cmd)
+
+        if r[0] != 0:
+            self.err('Could not build GCC: ' + r[1])
+
+        self.log('Test process has been started')
+        r = commands.getstatusoutput(make_test_cmd)
+
+    def extract_logs(workdir, revision):
+        objdir = os.path.join(workdir, 'objdir')
+        os.chdir(objdir)
+
+        logs_folder = os.path.join(self.logs_folder, revision)
+        if not os.path.exists(logs_folder):
+            os.makedirs(logs_folder)
+
+        r = commands.getstatusoutput('_extr_sums ' + logs_folder)
+        if r[0] != 0:
+            self.err('Could not extract sums: ' + r[1])
+
+        os.chdir(os.path.join(objdir, 'gcc', 'testsuite'))
+
+        r = commands.getstatusoutput('_extr_logs ' + logs_folder)
+        if r[0] != 0:
+            self.err('Could not extract logs: ' + r[1])
+
+        self.os.chdir(objdir)
+
+    def compare_logs(r1, r2):
+        f1 = os.path.join(self.logs_folder, r1)
+        os.chdir(f1)
+
+        f2 = os.path.join(self.logs_folder, r2)
+
+        r = commands.getstatusoutput('_compare_sums %s' % (f2))
+        if r[0] != 0:
+            self.err('Could not compare logs: ' + r[1])
+
+        return r[1]
+
+    def run(self):
+        # core of the script
+        self.process_revision(revision, self.configure_cmd)
+        self.process_cleanup()
+        self.process_revision(parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
+
+        diff = compare_logs(revision, parent)
+
+        with open(self.report_file, 'w+') as f:
+          f.write(diff)
+
+        f.close()
+
+        self.process_cleanup()
+
+        self.log('Commit log', False)
+        self.log(revision_log_message, False)
+        self.send_email(messages + [diff], revision, parent, False)
+
+gcc = None
+
+def signal_handler(signum, frame):
+    global gcc
+    gcc.log('Signal interrupt handler called')
+    gcc.process_cleanup()
+    exit(2)
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -198,56 +254,9 @@ if not options.revision:
 if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
   err('git folder does not exist')
 
-# build of configure command line
-configure_cmd = ['../configure']
+revisions = options.revision.split(',')
 
-# TODO: remove
-configure_cmd += ['--disable-bootstrap', '--enable-checking=release', '--enable-languages=c,c++']
-
-os.chdir(options.folder)
-
-log('Fetching repository')
-r = commands.getstatusoutput('git fetch --all')
-
-if r[0] != 0:
-  err('Git fetch has failed')
-
-revision = get_sha1_for_revision(options.revision)
-parent = get_sha1_for_revision(options.revision + '^')
-
-revision_log_message = get_log_message(revision)
-parent_log_message = get_log_message(parent)
-
-if options.parent != None:
-  parent = get_sha1_for_revision(options.parent)
-
-# create folder
-root = os.path.join(options.folder, 'tester')
-logs_folder = os.path.join(root, 'logs')
-reports_folder = os.path.join(root, 'reports')
-
-if not os.path.exists(logs_folder):
-    os.makedirs(logs_folder)
-
-report_file = os.path.join(reports_folder, revision + '_' + parent + '.log')
-
-log('Paralellism: ' + str(parallelism))
-log('Report file: ' + report_file)
-
-# core of the script
-process_revision(revision, options, logs_folder, configure_cmd)
-process_cleanup()
-process_revision(parent, options, logs_folder, configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
-
-diff = compare_logs(logs_folder, reports_folder, revision, parent)
-
-with open(report_file, 'w+') as f:
-  f.write(diff)
-
-f.close()
-
-process_cleanup()
-
-log('Commit log', False)
-log(revision_log_message, False)
-send_email(all_messages + [diff], revision, parent, False)
+for (i, revision) in enumerate(revisions):
+    gcc = GccTester(revision, options)
+    gcc.log('Processing revision: %d/%d' % (i + 1, len(revisions)))
+    gcc.run()

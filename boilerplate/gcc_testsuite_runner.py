@@ -42,8 +42,8 @@ def tail(message):
 def err(message):
   global revision
   global parent
-  log(tail(message))
-  send_email('\n'.join(all_messages), revision, parent, True)
+  log('\n' + tail(message))
+  send_email(all_messages, revision, parent, True)
   exit(1)
 
 def log(message):
@@ -150,15 +150,17 @@ def get_sha1_for_revision(revision):
 def get_log_message(revision):
     return subprocess.check_output(['git', 'log', '-n1', revision]).strip()
 
-def send_email(text, revision, parent, failure = False):
+def send_email(messages, revision, parent, failure = False):
     msg = MIMEMultipart("alternative")
+
+    text = '\n'.join(messages)
     text = MIMEText(text, "plain", "utf-8")
     msg.attach(text)
 
     sender = 'mliska@suse.cz'
     recipient = sender
 
-    msg['Subject'] = 'GCC tester email: %s' % ('FAILURE' if failure else 'SUCCESS')
+    msg['Subject'] = 'GCC tester email: %s (%s vs. %s)' % ('FAILURE' if failure else 'SUCCESS', revision, parent)
     msg['From'] = sender
     msg['To'] = recipient
 
@@ -241,3 +243,5 @@ with open(report_file, 'w+') as f:
 f.close()
 
 process_cleanup()
+
+send_email(all_messages + [diff, 'git commit log:', revision_log_message], revision, parent, False)

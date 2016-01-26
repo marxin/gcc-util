@@ -197,7 +197,7 @@ class GccTester:
 
         os.chdir(objdir)
 
-    def compare_logs(r1, r2):
+    def compare_logs(self, r1, r2):
         f1 = os.path.join(self.logs_folder, r1)
         os.chdir(f1)
 

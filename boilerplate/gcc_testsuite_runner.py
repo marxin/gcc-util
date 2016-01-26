@@ -226,7 +226,8 @@ class GccTester:
 
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
-        self.send_email(messages + [diff], self.revision, self.parent, False)
+        self.messages += [diff]
+        self.send_email(False)
 
 gcc = None
 

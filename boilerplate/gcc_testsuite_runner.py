@@ -35,9 +35,6 @@ class GccTester:
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
 
-        # TODO: remove
-        self.configure_cmd += ['--disable-bootstrap', '--enable-checking=release', '--enable-languages=c,c++']
-
         os.chdir(self.folder)
 
         self.log('Fetching repository')

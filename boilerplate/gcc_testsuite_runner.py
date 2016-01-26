@@ -13,12 +13,14 @@ from optparse import OptionParser
 
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
 
 to_cleanup = []
+all_messages = []
 
 def signal_handler(signum, frame):
   log('Signal interrupt handler called')
@@ -33,13 +35,23 @@ def process_cleanup():
 
   to_cleanup = []
 
+def tail(message):
+  lines = message.split('\n')
+  return '\n'.join(lines[-50:])
+
 def err(message):
-  log(message)
+  global revision
+  global parent
+  log(tail(message))
+  send_email('\n'.join(all_messages), revision, parent, True)
   exit(1)
 
 def log(message):
   d = str(datetime.datetime.now())
-  print('[%s]: %s' % (d, message))
+  s = '[%s]: %s' % (d, message)
+  print(s)
+  global all_messages
+  all_messages += [s]
 
 def archive_git(target_folder, revision):
   target_folder = os.path.join(target_folder, 'gcc_' + revision)
@@ -100,7 +112,8 @@ def compile_and_test(workdir, configure_cmd):
   r = commands.getstatusoutput(make_test_cmd)
 
 def extract_logs(workdir, logs_root, revision):
-  os.chdir(os.path.join(workdir, 'objdir'))
+  objdir = os.path.join(workdir, 'objdir')
+  os.chdir(objdir)
 
   logs_folder = os.path.join(logs_root, revision)
 
@@ -111,9 +124,13 @@ def extract_logs(workdir, logs_root, revision):
   if r[0] != 0:
     err('Could not extract sums: ' + r[1])
 
+  os.chdir(os.path.join(objdir, 'gcc', 'testsuite'))
+
   r = commands.getstatusoutput('_extr_logs ' + logs_folder)
   if r[0] != 0:
     err('Could not extract logs: ' + r[1])
+
+  os.chdir(objdir)
 
 def compare_logs(logs_folder, report_folder, r1, r2):
   f1 = os.path.join(logs_folder, r1)
@@ -134,12 +151,14 @@ def get_log_message(revision):
     return subprocess.check_output(['git', 'log', '-n1', revision]).strip()
 
 def send_email(text, revision, parent, failure = False):
-    msg = MIMEText(text)
+    msg = MIMEMultipart("alternative")
+    text = MIMEText(text, "plain", "utf-8")
+    msg.attach(text)
 
     sender = 'mliska@suse.cz'
     recipient = sender
 
-    msg['Subject'] = 'GCC tester email: ' % ('FAILURE' if failure else 'SUCCESS')
+    msg['Subject'] = 'GCC tester email: %s' % ('FAILURE' if failure else 'SUCCESS')
     msg['From'] = sender
     msg['To'] = recipient
 

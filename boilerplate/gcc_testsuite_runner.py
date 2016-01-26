@@ -177,7 +177,7 @@ class GccTester:
         self.log('Test process has been started')
         r = commands.getstatusoutput(make_test_cmd)
 
-    def extract_logs(workdir, revision):
+    def extract_logs(self, workdir, revision):
         objdir = os.path.join(workdir, 'objdir')
         os.chdir(objdir)
 

@@ -215,7 +215,7 @@ class GccTester:
         self.process_cleanup()
         self.process_revision(self.parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
 
-        diff = compare_logs(self.revision, self.parent)
+        diff = self.compare_logs(self.revision, self.parent)
 
         with open(self.report_file, 'w+') as f:
           f.write(diff)

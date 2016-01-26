@@ -210,11 +210,11 @@ class GccTester:
 
     def run(self):
         # core of the script
-        self.process_revision(revision, self.configure_cmd)
+        self.process_revision(self.revision, self.configure_cmd)
         self.process_cleanup()
-        self.process_revision(parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
+        self.process_revision(self.parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
 
-        diff = compare_logs(revision, parent)
+        diff = compare_logs(self.revision, self.parent)
 
         with open(self.report_file, 'w+') as f:
           f.write(diff)
@@ -256,7 +256,7 @@ if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
 
 revisions = options.revision.split(',')
 
-for (i, revision) in enumerate(revisions):
-    gcc = GccTester(revision, options)
+for (i, r) in enumerate(revisions):
+    gcc = GccTester(r, options)
     gcc.log('Processing revision: %d/%d' % (i + 1, len(revisions)))
     gcc.run()

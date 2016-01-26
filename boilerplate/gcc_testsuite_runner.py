@@ -45,7 +45,7 @@ class GccTester:
 
         self.revision = self.get_sha1_for_revision(self.revision)
         if options.parent != None:
-            self.parent = self.get_sha1_for_revision(self.parent)
+            self.parent = self.get_sha1_for_revision(options.parent)
         else:
             self.parent = self.get_sha1_for_revision(self.revision + '^')
 

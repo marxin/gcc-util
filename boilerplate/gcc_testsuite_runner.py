@@ -145,6 +145,9 @@ if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
 # build of configure command line
 configure_cmd = ['../configure']
 
+# TODO: remove
+configure += ['--disable-bootstrap', 'enable-checking=release', 'enable-languages=c,c++']
+
 os.chdir(options.folder)
 
 log('Fetching repository')

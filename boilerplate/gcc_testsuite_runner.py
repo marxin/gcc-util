@@ -44,9 +44,10 @@ class GccTester:
             self.err('Git fetch has failed')
 
         self.revision = self.get_sha1_for_revision(self.revision)
-        self.parent = self.get_sha1_for_revision(self.revision + '^')
         if options.parent != None:
-          self.parent = self.get_sha1_for_revision(self.parent)
+            self.parent = self.get_sha1_for_revision(self.parent)
+        else:
+            self.parent = self.get_sha1_for_revision(self.revision + '^')
 
         self.revision_log_message = self.get_log_message(revision)
         self.parent_log_message = self.get_log_message(self.parent)

@@ -97,7 +97,10 @@ class GccTester:
         self.to_cleanup = []
 
     def get_sha1_for_revision(self, revision):
-        return subprocess.check_output(['git', 'rev-parse', revision]).strip()
+        try:
+            return subprocess.check_output(['git', 'rev-parse', revision]).strip()
+        except subprocess.CalledProcessError:
+            self.err('git rev-parse has failed', False)
 
     def get_log_message(self, revision):
         return subprocess.check_output(['git', 'log', '-n1', revision]).strip()

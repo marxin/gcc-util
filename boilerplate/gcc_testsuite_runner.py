@@ -15,6 +15,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+class GccTesterError(Exception):
+    pass
+
 parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
@@ -41,7 +44,7 @@ class GccTester:
         r = commands.getstatusoutput('git fetch --all')
 
         if r[0] != 0:
-            self.err('Git fetch has failed')
+            self.err('Git fetch has failed', False)
 
         self.revision = self.get_sha1_for_revision(self.revision)
         if options.parent != None:
@@ -85,10 +88,11 @@ class GccTester:
 
         self.messages += [s]
 
-    def err(self, message):
+    def err(self, message, send_email = True):
         self.log('\n' + tail(message))
-        self.send_email(True)
-        exit(1)
+        if send_email:
+            self.send_email(True)
+        raise GccTesterError()
 
     def process_cleanup(self):
         for i in self.to_cleanup:
@@ -236,7 +240,7 @@ def signal_handler(signum, frame):
     global gcc
     gcc.log('Signal interrupt handler called')
     gcc.process_cleanup()
-    exit(2)
+    exit(1)
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -260,6 +264,9 @@ if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
 revisions = options.revision.split(',')
 
 for (i, r) in enumerate(revisions):
-    gcc = GccTester(r, options)
-    gcc.log('Processing revision: %d/%d' % (i + 1, len(revisions)))
-    gcc.run()
+    try:
+        gcc = GccTester(r, options)
+        gcc.log('Processing revision: %d/%d' % (i + 1, len(revisions)))
+        gcc.run()
+    except GccTesterError as e:
+        pass

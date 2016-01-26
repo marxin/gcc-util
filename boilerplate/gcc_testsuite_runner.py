@@ -11,6 +11,9 @@ import signal
 
 from optparse import OptionParser
 
+import smtplib
+from email.mime.text import MIMEText
+
 parallelism = multiprocessing.cpu_count()
 make_cmd = 'make -j' + str(parallelism)
 make_test_cmd = 'make check -k -j' + str(parallelism)
@@ -108,6 +111,10 @@ def extract_logs(workdir, logs_root, revision):
   if r[0] != 0:
     err('Could not extract sums: ' + r[1])
 
+  r = commands.getstatusoutput('_extr_logs ' + logs_folder)
+  if r[0] != 0:
+    err('Could not extract logs: ' + r[1])
+
 def compare_logs(logs_folder, report_folder, r1, r2):
   f1 = os.path.join(logs_folder, r1)
   os.chdir(f1)
@@ -122,6 +129,23 @@ def compare_logs(logs_folder, report_folder, r1, r2):
 
 def get_sha1_for_revision(revision):
     return subprocess.check_output(['git', 'rev-parse', revision]).strip()
+
+def get_log_message(revision):
+    return subprocess.check_output(['git', 'log', '-n1', revision]).strip()
+
+def send_email(text, revision, parent, failure = False):
+    msg = MIMEText(text)
+
+    sender = 'mliska@suse.cz'
+    recipient = sender
+
+    msg['Subject'] = 'GCC tester email: ' % ('FAILURE' if failure else 'SUCCESS')
+    msg['From'] = sender
+    msg['To'] = recipient
+
+    s = smtplib.SMTP('localhost')
+    s.sendmail(sender, [recipient], msg.as_string())
+    s.quit()
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -156,12 +180,11 @@ r = commands.getstatusoutput('git fetch --all')
 if r[0] != 0:
   err('Git fetch has failed')
 
-r = commands.getstatusoutput('git show ' + options.revision)
-
-if r[0] != 0:
-  err('Git revision does not exist')
-
+revision = get_sha1_for_revision(options.revision)
 parent = get_sha1_for_revision(options.revision + '^')
+
+revision_log_message = get_log_message(revision)
+parent_log_message = get_log_message(parent)
 
 if options.parent != None:
   parent = get_sha1_for_revision(options.parent)
@@ -174,15 +197,15 @@ reports_folder = os.path.join(root, 'reports')
 if not os.path.exists(logs_folder):
     os.makedirs(logs_folder)
 
-report_file = os.path.join(reports_folder, options.revision + '_' + parent + '.log')
+report_file = os.path.join(reports_folder, revision + '_' + parent + '.log')
 
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
 
-work_folder = prepare_revision(options, options.revision)
+work_folder = prepare_revision(options, revision)
 
 compile_and_test(work_folder, configure_cmd)
-extract_logs(work_folder, logs_folder, options.revision)
+extract_logs(work_folder, logs_folder, revision)
 
 process_cleanup()
 
@@ -191,7 +214,7 @@ work_folder = prepare_revision(options, parent)
 compile_and_test(work_folder, configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
 extract_logs(work_folder, options.folder, parent)
 
-diff = compare_logs(logs_folder, reports_folder, options.revision, parent)
+diff = compare_logs(logs_folder, reports_folder, revision, parent)
 
 with open(report_file, 'w+') as f:
   f.write(diff)

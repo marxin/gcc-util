@@ -30,7 +30,6 @@ class GccTester:
     def __init__(self, revision, options):
         self.folder = options.folder
         self.temp = options.temp
-        self.revision = revision
         self.messages = []
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
@@ -43,7 +42,7 @@ class GccTester:
         if r[0] != 0:
             self.err('Git fetch has failed', False)
 
-        self.revision = self.get_sha1_for_revision(self.revision)
+        self.revision = self.get_sha1_for_revision(revision)
         if options.parent != None:
             self.parent = self.get_sha1_for_revision(options.parent)
         else:

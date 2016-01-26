@@ -76,11 +76,14 @@ def compile_and_test(workdir, configure_cmd):
   if os.path.exists(objdir):
     shutil.rmtree(objdir)
 
-  os.mkdir(objdir)
+  os.makedirs(objdir)
+  log('Creating: %s' % objdir)
+
+  log('Changing chroot to folder:' + objdir)
   os.chdir(objdir)
 
   log('Configure process has been started')
-  r = commands.getstatusoutput(configure_cmd)
+  r = commands.getstatusoutput(' '.join(configure_cmd))
   if r[0] != 0:
     err('Could not configure GCC: ' + r[1])
 
@@ -93,10 +96,10 @@ def compile_and_test(workdir, configure_cmd):
   log('Test process has been started')
   r = commands.getstatusoutput(make_test_cmd)
 
-def extract_logs(workdir, gitdir, revision):
+def extract_logs(workdir, logs_root, revision):
   os.chdir(os.path.join(workdir, 'objdir'))
 
-  logs_folder = os.path.join(gitdir, 'logs', revision)
+  logs_folder = os.path.join(logs_root, revision)
 
   if not os.path.exists(logs_folder):
     os.makedirs(logs_folder)
@@ -105,11 +108,11 @@ def extract_logs(workdir, gitdir, revision):
   if r[0] != 0:
     err('Could not extract sums: ' + r[1])
 
-def compare_logs(folder, r1, r2):
-  f1 = os.path.join(folder, 'logs', r1)
+def compare_logs(logs_folder, report_folder, r1, r2):
+  f1 = os.path.join(logs_folder, r1)
   os.chdir(f1)
 
-  f2 = os.path.join(folder, 'logs', r2)
+  f2 = os.path.join(logs_folder, r2)
 
   r = commands.getstatusoutput('_compare_sums %s' % (f2))
   if r[0] != 0:
@@ -117,15 +120,15 @@ def compare_logs(folder, r1, r2):
 
   return r[1]
 
+def get_sha1_for_revision(revision):
+    return subprocess.check_output(['git', 'rev-parse', revision])
+
 signal.signal(signal.SIGINT, signal_handler)
 
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
 parser.add_option("-r", "--revision", dest="revision", help="git revision")
 parser.add_option("-p", "--parent-revision", dest="parent", help="parent git revision")
-parser.add_option("-c", "--checking", action="store_true", dest="checking", default=False, help = "enable checking")
-parser.add_option("-b", "--bootstrap", action="store_true", dest="bootstrap", default=False, help = "process bootstrap")
-parser.add_option("-l", "--languages", dest="languages", help = "languages")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 
 (options, args) = parser.parse_args()
@@ -140,18 +143,7 @@ if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
   err('git folder does not exist')
 
 # build of configure command line
-configure_cmd = '../configure'
-
-if not options.bootstrap:
-  configure_cmd = configure_cmd + ' --disable-bootstrap'
-
-if not options.checking:
-  configure_cmd = configure_cmd + ' --enable-checking=release'
-
-if options.languages != None:
-  configure_cmd = configure_cmd + ' --enable-languages=' + options.languages
-
-log('Built configure options: ' + configure_cmd)
+configure_cmd = ['../configure']
 
 os.chdir(options.folder)
 
@@ -166,17 +158,20 @@ r = commands.getstatusoutput('git show ' + options.revision)
 if r[0] != 0:
   err('Git revision does not exist')
 
-r = commands.getstatusoutput('git rev-parse ' + options.revision + '^')
-
-if r[0] != 0:
-  err('Git revision of parent cannot be loaded')
-
-parent = r[1]
+parent = get_sha1_for_revision(options.revision + '^')
 
 if options.parent != None:
-  parent = options.parent
+  parent = get_sha1_for_revision(options.parent)
 
-report_file = os.path.join(options.folder, 'logs', options.revision[:10] + '_' + parent[:10] + '.log')
+# create folder
+root = os.path.join(options.folder, 'tester')
+logs_folder = os.path.join(root, 'logs')
+reports_folder = os.path.join(root, 'reports')
+
+if not os.path.exists(logs_folder):
+    os.makedirs(logs_folder)
+
+report_file = os.path.join(reports_folder, options.revision + '_' + parent + '.log')
 
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
@@ -184,16 +179,16 @@ log('Report file: ' + report_file)
 work_folder = prepare_revision(options, options.revision)
 
 compile_and_test(work_folder, configure_cmd)
-extract_logs(work_folder, options.folder, options.revision)
+extract_logs(work_folder, logs_folder, options.revision)
 
 process_cleanup()
 
 work_folder = prepare_revision(options, parent)
 
-compile_and_test(work_folder, configure_cmd)
+compile_and_test(work_folder, configure_cmd + ['--disable-bootstrap', 'enable-checking=release'])
 extract_logs(work_folder, options.folder, parent)
 
-diff = compare_logs(options.folder, options.revision, parent)
+diff = compare_logs(logs_folder, reports_folder, options.revision, parent)
 
 with open(report_file, 'w+') as f:
   f.write(diff)

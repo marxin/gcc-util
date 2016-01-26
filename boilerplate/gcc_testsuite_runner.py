@@ -46,7 +46,7 @@ class GccTester:
         self.revision = self.get_sha1_for_revision(self.revision)
         self.parent = self.get_sha1_for_revision(self.revision + '^')
         if options.parent != None:
-          self.parent = get_sha1_for_revision(self.parent)
+          self.parent = self.get_sha1_for_revision(self.parent)
 
         self.revision_log_message = self.get_log_message(revision)
         self.parent_log_message = self.get_log_message(self.parent)
@@ -226,7 +226,7 @@ class GccTester:
 
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
-        self.messages += [diff]
+        self.messages += ['Compare logs', diff]
         self.send_email(False)
 
 gcc = None

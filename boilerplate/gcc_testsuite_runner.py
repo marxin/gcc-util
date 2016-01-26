@@ -46,9 +46,11 @@ def err(message):
   send_email(all_messages, revision, parent, True)
   exit(1)
 
-def log(message):
-  d = str(datetime.datetime.now())
-  s = '[%s]: %s' % (d, message)
+def log(message, add_time = True):
+  s = message
+  if add_time:
+    d = str(datetime.datetime.now())
+    s = '[%s]: %s' % (d, message)
   print(s)
   global all_messages
   all_messages += [s]
@@ -157,8 +159,8 @@ def send_email(messages, revision, parent, failure = False):
     text = MIMEText(text, "plain", "utf-8")
     msg.attach(text)
 
-    sender = 'mliska@suse.cz'
-    recipient = sender
+    sender = 'mliska+tester@suse.cz'
+    recipient = 'mliska@suse.cz'
 
     msg['Subject'] = 'GCC tester email: %s (%s vs. %s)' % ('FAILURE' if failure else 'SUCCESS', revision, parent)
     msg['From'] = sender
@@ -244,4 +246,6 @@ f.close()
 
 process_cleanup()
 
-send_email(all_messages + [diff, 'git commit log:', revision_log_message], revision, parent, False)
+log('Commit log', False)
+log(revision_log_message, False)
+send_email(all_messages + [diff], revision, parent, False)

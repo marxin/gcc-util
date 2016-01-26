@@ -170,6 +170,15 @@ def send_email(messages, revision, parent, failure = False):
     s.sendmail(sender, [recipient], msg.as_string())
     s.quit()
 
+def process_revision(revision, options, logs_folder, configure_cmd):
+    log('Processing revision: %s' % revision)
+    if os.path.exists(os.path.join(logs_folder, revision)):
+        log('Skipping build, already in log cache')
+    else:
+        work_folder = prepare_revision(options, revision)
+        compile_and_test(work_folder, configure_cmd)
+        extract_logs(work_folder, logs_folder, revision)
+
 signal.signal(signal.SIGINT, signal_handler)
 
 parser = OptionParser()
@@ -225,17 +234,10 @@ report_file = os.path.join(reports_folder, revision + '_' + parent + '.log')
 log('Paralellism: ' + str(parallelism))
 log('Report file: ' + report_file)
 
-work_folder = prepare_revision(options, revision)
-
-compile_and_test(work_folder, configure_cmd)
-extract_logs(work_folder, logs_folder, revision)
-
+# core of the script
+process_revision(revision, options, logs_folder, configure_cmd)
 process_cleanup()
-
-work_folder = prepare_revision(options, parent)
-
-compile_and_test(work_folder, configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
-extract_logs(work_folder, options.folder, parent)
+process_revision(parent, options, logs_folder, configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
 
 diff = compare_logs(logs_folder, reports_folder, revision, parent)
 

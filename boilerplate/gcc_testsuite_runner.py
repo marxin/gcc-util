@@ -89,7 +89,7 @@ class GccTester:
         self.send_email(True)
         exit(1)
 
-    def process_cleanup():
+    def process_cleanup(self):
         for i in self.to_cleanup:
             shutil.rmtree(i)
 

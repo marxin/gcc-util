@@ -146,7 +146,7 @@ if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
 configure_cmd = ['../configure']
 
 # TODO: remove
-configure_cmd += ['--disable-bootstrap', 'enable-checking=release', 'enable-languages=c,c++']
+configure_cmd += ['--disable-bootstrap', '--enable-checking=release', '--enable-languages=c,c++']
 
 os.chdir(options.folder)
 
@@ -188,7 +188,7 @@ process_cleanup()
 
 work_folder = prepare_revision(options, parent)
 
-compile_and_test(work_folder, configure_cmd + ['--disable-bootstrap', 'enable-checking=release'])
+compile_and_test(work_folder, configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
 extract_logs(work_folder, options.folder, parent)
 
 diff = compare_logs(logs_folder, reports_folder, options.revision, parent)

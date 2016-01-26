@@ -195,7 +195,7 @@ class GccTester:
         if r[0] != 0:
             self.err('Could not extract logs: ' + r[1])
 
-        self.os.chdir(objdir)
+        os.chdir(objdir)
 
     def compare_logs(r1, r2):
         f1 = os.path.join(self.logs_folder, r1)

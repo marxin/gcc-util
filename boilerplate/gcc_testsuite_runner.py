@@ -121,7 +121,7 @@ def compare_logs(logs_folder, report_folder, r1, r2):
   return r[1]
 
 def get_sha1_for_revision(revision):
-    return subprocess.check_output(['git', 'rev-parse', revision])
+    return subprocess.check_output(['git', 'rev-parse', revision]).strip()
 
 signal.signal(signal.SIGINT, signal_handler)
 

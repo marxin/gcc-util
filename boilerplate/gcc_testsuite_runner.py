@@ -30,6 +30,7 @@ class GccTester:
     def __init__(self, revision, options):
         self.folder = options.folder
         self.temp = options.temp
+        self.languages = options.languages
         self.messages = []
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
@@ -217,7 +218,7 @@ class GccTester:
         # core of the script
         self.process_revision(self.revision, self.configure_cmd)
         self.process_cleanup()
-        self.process_revision(self.parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release'])
+        self.process_revision(self.parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release', '--enable-languages=' + self.languages])
 
         diff = self.compare_logs(self.revision, self.parent)
 
@@ -248,6 +249,7 @@ parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
 parser.add_option("-r", "--revision", dest="revision", help="git revision")
 parser.add_option("-p", "--parent-revision", dest="parent", help="parent git revision")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
+parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")
 
 (options, args) = parser.parse_args()
 

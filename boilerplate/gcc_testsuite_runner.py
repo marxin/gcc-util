@@ -34,6 +34,7 @@ class GccTester:
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
         self.default_options = ['--enable-languages=' + options.languages]
+        self.extra_configuration = options.extra_configuration.split(',')
 
         os.chdir(self.folder)
 
@@ -216,7 +217,7 @@ class GccTester:
 
     def run(self):
         # core of the script
-        self.process_revision(self.revision, self.configure_cmd + self.default_options)
+        self.process_revision(self.revision, self.configure_cmd + self.default_options + self.extra_configuration)
         self.process_cleanup()
         self.process_revision(self.parent, self.configure_cmd + self.default_options + ['--disable-bootstrap', '--enable-checking=release'])
 
@@ -250,6 +251,7 @@ parser.add_option("-r", "--revision", dest="revision", help="git revision")
 parser.add_option("-p", "--parent-revision", dest="parent", help="parent git revision")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")
+parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options (not used by parent), separated by comma")
 
 (options, args) = parser.parse_args()
 

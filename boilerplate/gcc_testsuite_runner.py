@@ -30,10 +30,10 @@ class GccTester:
     def __init__(self, revision, options):
         self.folder = options.folder
         self.temp = options.temp
-        self.languages = options.languages
         self.messages = []
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
+        self.default_options = ['--enable-languages=' + options.languages]
 
         os.chdir(self.folder)
 
@@ -216,9 +216,9 @@ class GccTester:
 
     def run(self):
         # core of the script
-        self.process_revision(self.revision, self.configure_cmd)
+        self.process_revision(self.revision, self.configure_cmd + self.default_options)
         self.process_cleanup()
-        self.process_revision(self.parent, self.configure_cmd + ['--disable-bootstrap', '--enable-checking=release', '--enable-languages=' + self.languages])
+        self.process_revision(self.parent, self.configure_cmd + self.default_options + ['--disable-bootstrap', '--enable-checking=release'])
 
         diff = self.compare_logs(self.revision, self.parent)
 

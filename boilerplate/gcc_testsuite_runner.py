@@ -34,7 +34,7 @@ class GccTester:
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
         self.default_options = ['--enable-languages=' + options.languages]
-        self.extra_configuration = options.extra_configuration.split(',')
+        self.extra_configuration = options.extra_configuration.split(',') if options.extra_configuration != None else []
 
         os.chdir(self.folder)
 

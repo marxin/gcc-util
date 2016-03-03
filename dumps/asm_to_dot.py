@@ -96,18 +96,18 @@ def print_bbs ():
 
     for bb in bbs:
         if bb in callbbs:
-            attrs =  '[style=filled, fillcolor=green, label="%s|  ?"];' % bb
+            attrs =  '[style=filled, fillcolor=green, label="%s"];' % bb
         else:
             if bb in mmbbs:
                 attrs = ('[style=filled, fillcolor=magenta, ' +
-                         'label="%s|  ?"];') % bb
+                         'label="%s"];') % bb
             else:
-                attrs = '[label="%s|  ?"];' % bb
+                attrs = '[label="%s"];' % bb
         print ('\t"%s"' % bb) + attrs
 
-#            print '\tnode [style=filled, fillcolor=green, label="%s|  ?"];' % bb
+#            print '\tnode [style=filled, fillcolor=green, label="%s"];' % bb
 #        else:
-#            print '\tnode [label="%s|  ?"];' % bb
+#            print '\tnode [label="%s"];' % bb
 #        print '\t"%s";' % bb
 
 

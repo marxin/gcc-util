@@ -12,6 +12,7 @@ import sys
 import os
 import getopt
 import time
+import getpass
 
 def die(s):
     "Give a string warning S to stderr and abort with exit code 1."
@@ -28,100 +29,141 @@ Options:
 -h            Diplay tis help and quit.
 --help        Display this help and quit.
 
--a            All default languages
--d            All default languages and Ada
--o            All default languages and Ada and ObjC++
-                (default in "b-obj" directory)
 -c            C only
 -p            C, C++ only
                 (default, except in "b-obj")
 -f            C, C++ and Fortran only
+-a            All languages (as understood by the configure script)
+-d            Ada, C, C++, Fortran, Java, Objc
+-o            Ada, C, C++, Fortran, Java, Objc, Obj-c++
+                (default in "b-obj" directory)
+-g            Ada, C, C++, Fortran, Go, Java, Objc, Obj-c++
 --fort        C and Fortran only
 --ada         C, C++ and Ada only
+--go          C, C++ and Go only
 --no-java     C, C++, Fortran, Ada and Objc only.
+--no-ada      C, C++, Fortran, Java, Objc, Obj-c++
 
 -b            Do bootstrap.  Bootstrap is otherwise only performed if the 
               current directory name is "b-obj".
 -n            Do not bootstrap whatever the name of the current directory is.
 
+--hsa         Pass --enable-offload-targets=hsa
 -r            Release checking instead of default "all" checking.
 --fold        "yes,fold" checking
 
---nosan       Pass "--disable-libsanitizer" (default on all platforms 
-              except x86_64)
+--no-san      Pass "--disable-libsanitizer" (default on all platforms 
+              except x86_64 and some selected hosts)
 --san         Do not pass "--disable-libsanitizer" (useful on other platforms)
---multi       Pass "--disable-multilib"
---no-multi    Pass "--disable-multilib".  Default on some problematic hosts.
+--multi       Pass "--enable-multilib"
+--no-multi    Pass "--disable-multilib".  Default on some hosts.
+--no-cilk     Pass "--disable-libcilkrts".  Default on selected hosts.
+--cilk        Do not pass "--enable-libcilkrts" even when disabled by default.
+--fast        Combination of --no-san --no-multi and --no-cilk
 --memstat     Pass "--enable-gather-detailed-mem-stats"
 
+--vgrind      Pass "--enable-valgrind-annotations"
 --gold        Pass "--enable-gold".
---plugin      Pass "--with-plugin-ld" even when not on a selected host
---no-plugin   Do not pass any "--with-plugin-ld" even on selected hosts
+--plugin      Pass "--with-plugin-ld" if gold plugin is found
 --lto-boot    LTO bootstrap.  Implies -b.
+--no-cfarmlib Do not use MPFR, GMP and MPC from /opt/cfarm even when present
 
 -z	      Just print the configure command, do not run it.
 
 """
 
+def is_exe(fpath):
+    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
 def main():
 
-    if os.getcwd().split("/")[1] == "abuild":
-        gold_path = "/abuild/mjambor/binutils-2.24/obj/gold/ld-new"
-    else:
-        gold_path = "/home/mjambor/binutils/obj/gold/ld-new"
-        pass
+    # ----- Some basic initialization -----
+
+    home_dir = os.getenv("HOME")
+
+    # ----- Lists of special hosts: -----
+
+    # Hosts on which we disable multilib by default
+    dis_multilib_hosts = ["alvy", "tuc"]
+
+    # Hosts on which we disable cilk-plus by default.
+    dis_cilkplus_hosts = ["alvy", "quantz"]
+
+    # x86_64 Hosts on which we disable sanitizers by default, for
+    # other platforms disabling is always the default
+    dis_sanitizers_hosts = ["alvy", "quantz"]
+
+    # ----- Simple defaults -----
 
     lang = "c,c++"
     bootstrap = False
     checking = "yes"
+    just_print = False
+    other_flags = ""
+    use_cfarm_lib_if_available = True
+    hsa_stuff = False
 
+    # ----- Default languages -----
+
+    if (os.path.split(os.getcwd())[1] == "b-obj"):
+        bootstrap = True
+        lang = "ada,c,c++,fortran,java,objc,obj-c++"
+
+
+    # ----- LTO plugin -----
     unm = os.uname()
-    if unm[-1] == "x86_64":
+    if os.getcwd().split("/")[1] == "abuild":
+        gold_path = "/abuild/mjambor/binutils-2.24/obj/gold/ld-new"
+    else:
+        gold_path = home_dir + "/binutils/obj/gold/ld-new"
+        pass
+
+    ld_plugin = False
+
+    # ----- Libsanitizer -----
+    if (unm[-1] == "x86_64"
+        and not (unm[1] in dis_sanitizers_hosts)):
         sanitizer = True
+        warn_sanitizer = False
     else:
         sanitizer = False
+        warn_sanitizer = True
         pass
     exp_sanitizer = False
 
-    warn_ld_plugin_disabled = True
-    try:
-        plugin_hosts = ["virgil", "alvy", "tuc", "evans"]
-        if plugin_hosts.count(os.environ["HOST"]) > 0:
-            ld_plugin = True
-        else:
-            ld_plugin = False
-            pass
-        pass
-    except:
-        ld_plugin = False
-        pass
-
+    # ----- Multilib -----
     ena_multilib = False
     dis_multilib = False
     warn_dis_multilib = False
     try:
-        dis_multilib_hosts = ["tuc"]
-        if dis_multilib_hosts.count(os.environ["HOST"]) > 0:
+        if unm[1] in dis_multilib_hosts:
             dis_multilib = True
             warn_dis_multilib = True
         pass
     except:
         pass
 
-    just_print = False
-    other_flags = ""
-
-    if (os.path.split(os.getcwd())[1] == "b-obj"):
-        bootstrap = True
-        lang = "all,ada,obj-c++"
-
+    # ----- Cilk-plus -----
+    dis_cilkplus = False
+    warn_dis_cilkplus = False
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hadocpfbnrz",
+        if unm[1] in dis_cilkplus_hosts:
+            dis_cilkplus = True
+            warn_dis_cilkplus = True
+            pass
+    except:
+        pass
+    
+    # ----- Process arguments -----
+    try:
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hadogcpfbnrz",
                                        ["help", "fort", "ada", "no-java",
-                                        "fold", "nosan", "san", "memstat",
-                                        "gold", "plugin", "no-plugin",
-                                        "lto-boot", "multi", "no-multi"])
+                                        "go", "no-ada", "fold", "no-san",
+                                        "san", "memstat", "vgrind",
+                                        "gold", "plugin",
+                                        "lto-boot", "multi",
+                                        "no-multi", "cilk", "no-cilk",
+                                        "fast", "no-cfarmlib", "hsa"])
     except getopt.GetoptError, err:
         # print help information and exit:
         print_usage()
@@ -133,9 +175,11 @@ def main():
         elif o == "-a":
             lang = "all"
         elif o == "-d":
-            lang = "all,ada"
+            lang = "ada,c,c++,fortran,java,objc"
         elif o == "-o":
-            lang = "all,ada,obj-c++"
+            lang = "ada,c,c++,fortran,java,objc,obj-c++"
+        elif o == "-g":
+            lang = "ada,c,c++,fortran,go,java,objc,obj-c++"
         elif o == "-c":
             lang = "c"
         elif o == "-p":
@@ -146,8 +190,12 @@ def main():
             lang = "c,fortran"
         elif o == "--ada":
             lang = "c,c++,ada"
+        elif o == "--go":
+            lang = "c,c++,go"
         elif o == "--no-java":
             lang = "c,c++,fortran,objc,ada"
+        elif o == "--no-ada":
+            lang = "c,c++,fortran,java,objc,obj-c++"
         elif o == "-b":
             bootstrap = True
         elif o == "-n":
@@ -158,21 +206,22 @@ def main():
             just_print = True
         elif o == "--fold":
             checking = "yes,fold"
-        elif o == "--nosan":
+        elif o == "--no-san":
             sanitizer = False
             exp_sanitizer = False
+            warn_sanitizer = False
         elif o == "--san":
             sanitizer = True;
             exp_sanitizer = True            
+            warn_sanitizer = False
         elif o == "--memstat":
             other_flags = other_flags + " --enable-gather-detailed-mem-stats"
         elif o == "--gold":
             other_flags = other_flags + " --enable-gold"
+        elif o == "--vgrind":
+            other_flags = other_flags + " --enable-valgrind-annotations"
         elif o == "--plugin":
             ld_plugin = True
-        elif o == "--no-plugin":
-            warn_ld_plugin_disabled = False
-            ld_plugin = False
         elif o == "--lto-boot":
             bootstrap = True
             other_flags = other_flags + " --with-build-config=bootstrap-lto"
@@ -184,12 +233,34 @@ def main():
             dis_multilib = True
             warn_dis_multilib = False
             ena_multilib = False
+        elif o == "--cilk":
+            dis_cilkplus = False
+            warn_dis_cilkplus = False
+        elif o == "--no-cilk":
+            dis_cilkplus = True
+            warn_dis_cilkplus = False
+        elif o == "--fast":
+            sanitizer = False
+            exp_sanitizer = False
+            warn_sanitizer = False
+
+            dis_multilib = True
+            warn_dis_multilib = False
+            ena_multilib = False
+
+            dis_cilkplus = True
+            warn_dis_cilkplus = False
+        elif o == "--no-cfarmlib":
+            use_cfarm_lib_if_available = False
+        elif o == "--hsa":
+            hsa_stuff = True;
         else:
             print_usage()
             die ("Error, unknown option %s" % o)
             pass
         continue
 
+    # ----- Construct the command line -----
     warning = False
 
     if len(args) > 0:
@@ -223,16 +294,31 @@ def main():
         cmd = cmd + " --disable-bootstrap"
         pass
 
+    if hsa_stuff:
+        cmd = cmd + " --enable-offload-targets=hsa"
+        hsart1 = home_dir + "/hsa/HSA-Runtime-AMD"
+        hsart2 = home_dir + "/hsa/1.0F/HSA-Runtime-AMD"
+        if os.path.exists (hsart1):
+            cmd = cmd + " --with-hsa-runtime=" + hsart1
+        if os.path.exists (hsart2):
+            cmd = cmd + " --with-hsa-runtime=" + hsart2
+
     if ld_plugin:
+        if not is_exe (gold_path):
+            sys.stderr.write ("WARNING: Gold plugin requested but not found\n")
+            warning = True
+            pass
+
         cmd = cmd + " --with-plugin-ld=" + gold_path
-        pass
-    elif warn_ld_plugin_disabled:
-        sys.stderr.write ("WARNING: Not using ld plugin, expect LTO issues\n")
-        warning = True
         pass
 
     if not sanitizer:
         cmd = cmd + " --disable-libsanitizer"
+        if warn_sanitizer:
+            sys.stderr.write ("WARNING: Libsanitizer implicitely disabled for "
+                              + "this host, use --san to override.\n")
+            warning = True
+            pass
         pass
     elif exp_sanitizer:
         cmd = cmd + " --enable-libsanitizer"
@@ -250,6 +336,36 @@ def main():
         cmd = cmd + " --enable-multilib"
         pass
 
+    if dis_cilkplus:
+        cmd = cmd + " --disable-libcilkrts"
+        if warn_dis_cilkplus:
+            sys.stderr.write ("WARNING: Cilk-plus implicitely disabled for "
+                              + "this host, use --cilk to override.\n")
+            warning = True
+            pass
+        pass
+
+    if use_cfarm_lib_if_available:
+        cfarm_gmp = "/opt/cfarm/gmp-latest"
+        cfarm_mpfr = "/opt/cfarm/mpfr-latest"
+        cfarm_mpc = "/opt/cfarm/mpc-latest"
+        # Check compile farm libraries and use them if present
+        if os.path.isdir (cfarm_gmp):
+            cmd = cmd + " --with-gmp=" + cfarm_gmp
+            sys.stderr.write ("NOTE: Using compile farm GMP.\n")
+            warning = True
+            pass
+        if os.path.isdir (cfarm_mpfr):
+            cmd = cmd + " --with-mpfr=" + cfarm_mpfr
+            sys.stderr.write ("NOTE: Using compile farm MPFR.\n")
+            warning = True
+            pass
+        if os.path.isdir (cfarm_mpc):
+            cmd = cmd + " --with-mpc=" + cfarm_mpc
+            sys.stderr.write ("NOTE: Using compile farm MPC.\n")
+            warning = True
+            pass
+
     cmd = cmd + other_flags
     
     if warning:
@@ -257,6 +373,7 @@ def main():
         pass
 
     print(cmd)
+    ret = 0;
     
     if not just_print:
         if warning:
@@ -264,8 +381,9 @@ def main():
         else:
             time.sleep(0.5)
             pass
-        os.system(cmd)
+        ret = os.system(cmd)
         pass
+    sys.exit(ret);
     return
 
 if __name__ == '__main__':

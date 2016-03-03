@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# This script tries to find all includes of header CHANGED (see and
+# change this variable below) in all .c andd .h files in the current
+# directory or any subdirectory and makes sure that all of these
+# include the file NEEDED (likewise) before they include CHANGED.  It
+# also produces Cangelog-like files /tmp/add-includes-moved and
+# /tmp/add-includes-added to assist with making changelog for this
+# change.
+
+CHANGED="gimple-iterator.h"
+NEEDED="tree-cfg.h"
+
+find . -name '*.[ch]' -print | while read FILE; do
+    echo $FILE
+    STR=`echo '#include "'$CHANGED'"'`
+
+    if grep -q "$STR" $FILE ; then
+
+	NEEDED_STR=`echo '#include "'$NEEDED'"'`
+	C_INC_LINE=`grep -n "$STR" $FILE | cut -d: -f1`
+	if grep -q "$NEEDED_STR" $FILE ; then
+	    N_INC_LINE=`grep -n "$NEEDED_STR" $FILE | cut -d: -f1`
+	    if (($C_INC_LINE < $N_INC_LINE)); then
+		echo ${N_INC_LINE}d$'\n'${C_INC_LINE}i$'\n'${NEEDED_STR}$'\n.\nw\n' | ed -s $FILE > /dev/null
+		echo $'\t'"* $FILE: Likewise" >> /tmp/add-includes-moved
+	    else
+		echo $FILE >> /tmp/add-includes-ok
+	    fi
+	else
+	    echo ${C_INC_LINE}i$'\n'${NEEDED_STR}$'\n.\nw\n' | ed -s $FILE > /dev/null
+	    echo $'\t'"* $FILE: Likewise" >> /tmp/add-includes-added
+	fi
+	
+    fi
+done
+

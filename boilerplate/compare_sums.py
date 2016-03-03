@@ -13,6 +13,7 @@ def pre_process_line (line):
     line = line.strip ()
     line = re.sub (r"/[^/]*/(obj|b-obj)/", "/path/", line)
     line = re.sub (r"\.c\.[0-9]{3}([itr])\.", r".c.\1.", line)
+    line = re.sub (r"/(gcc|mjambor)/[^/]*/src/libffi/", r"/gccsource/path/src/libffi/", line)
     line = re.sub (r"/[^/]*/[^/]*/libsanitizer/", "/libsanitizerpath/", line)
     if "asan" in line:
         i = line.find("==")

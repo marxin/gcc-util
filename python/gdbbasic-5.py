@@ -2,13 +2,7 @@
 # trunk.  Intended also to replace .gdbinit that comes with gcc.
 
 import gdb
-import sys
 from gdb.printing import PrettyPrinter, register_pretty_printer, RegexpCollectionPrettyPrinter
-
-# In Python 2 we need long for type-cast pointers but in Python 3
-# there is no such thing as long by default
-if sys.version > '3':
-    long = int
 
 # Basic commands to call internal pretty printers
 
@@ -55,7 +49,7 @@ class GimpleDebug (CallCompiledPrinter):
     """Call debug_gimple_stmt on a gimple statement"""
 
     def __init__(self):
-        super (GimpleDebug, self).__init__("pgg", "debug_gimple_stmt", "gimple *")
+        super (GimpleDebug, self).__init__("pgg", "debug_gimple_stmt", "gimple")
         return
 
 class RtxDebug (CallCompiledPrinter):
@@ -392,6 +386,13 @@ class JumpFunctionPrettyPrinter:
         if tp == int(gdb.parse_and_eval("IPA_JF_UNKNOWN")):
             r = "IPA_JF_UNKNOWN"
             pass
+        elif tp == int(gdb.parse_and_eval("IPA_JF_KNOWN_TYPE")):
+            kt = self.gdbval["value"]["known_type"]
+            r = ("IPA_JF_KNOWN_TYPE offset={:d} base_type={}, component_"
+                 + "type={}").format(long(kt["offset"]),
+                                     kt["base_type"].string,
+                                     kt["component_type"])
+            pass
         elif tp == int(gdb.parse_and_eval("IPA_JF_CONST")):
             c = self.gdbval["value"]["constant"]
             r = ("IPA_JF_CONST value={}, rdesc=0x{:x}"
@@ -412,9 +413,9 @@ class JumpFunctionPrettyPrinter:
             pass
         elif tp == int(gdb.parse_and_eval("IPA_JF_ANCESTOR")):
             an = self.gdbval["value"]["ancestor"]
-            r = ("IPA_JF_ANCESTOR offset={:d}, formal_id={:d} "
+            r = ("IPA_JF_ANCESTOR offset={:d}, type={}, formal_id={:d} "
                  + "agg_preserved={:d}").format(long(an["offset"]),
-                                                an["formal_id"],
+                                                an["type"], an["formal_id"],
                                                 an["agg_preserved"])
             pass
         else:

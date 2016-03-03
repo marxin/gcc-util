@@ -61,17 +61,17 @@ def load_symtab_base_attrs(self):
                                  ("weak_flag", "weak"),
                                  ("dllimport_flag", "dll_import"),
                                  ("comdat_flag", "comdat"),
-                                 ("comdat_group", "one_only"),
+#                                 ("x_comdat_group", "one_only"),
                                  ("visibility_specified",
                                   "visibility_specified")]))
-    cg = sym["decl"]["decl_with_vis"]["comdat_group"]
-    if (long(cg) != 0):
-        vis.append("comdat_group:%s" % tree_get_identifier_str (cg))
-        pass
-    sn = sym["decl"]["decl_with_vis"]["section_name"]
-    if (long(sn) != 0):
-        vis.append("section_name:%s" & sn["string"]["str"].string())
-        pass
+#    cg = sym["decl"]["decl_with_vis"]["comdat_group"]
+#    if (long(cg) != 0):
+#        vis.append("comdat_group:%s" % tree_get_identifier_str (cg))
+#        pass
+#    sn = sym["decl"]["decl_with_vis"]["section_name"]
+#    if (long(sn) != 0):
+#        vis.append("section_name:%s" & sn["string"]["str"].string())
+#        pass
     visnum = long(sym["decl"]["decl_with_vis"]["visibility"])
     if visnum != 0:
         visnames = gdb.parse_and_eval("visibility_types")
@@ -223,7 +223,7 @@ def build_gdb_symbol_table():
     """Build and return our representation of the symbol table"""
 
     tab = Symtab()
-    n = gdb.parse_and_eval ("symtab_nodes")
+    n = gdb.parse_and_eval ("symtab->nodes")
     while (long(n)):
         if symtab_node_is_function (n):
             current_symbol = GdbFunction(tab, n)
@@ -394,7 +394,7 @@ class SeriesOfSymtabPictures (gdb.Command):
             print("Producing image number {:03}".format(self.cmd.filenum))
             produce_dot (tab.dot_data (only_orders = only_orders,
                                        clones = clones,
-                                       only_ref_to_f = only_ref_to_f),
+                                       only_ref_to_f = True),
                          filename = filename)
             self.cmd.filenum = self.cmd.filenum + 1
             return False

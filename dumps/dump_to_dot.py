@@ -19,8 +19,9 @@ hadgoto = True;
 no_statements = 0
 empty_bbs = set()
 
-gcclabel_re = re.compile ("^<bb [0-9]+>");
-goto_re = re.compile ("goto <bb [0-9]+>");
+gcclabel_re = re.compile ("(^<bb [0-9]+>)|(^L\.[0-9]+)|(^<L[0-9]+>)")
+goto_re = re.compile ("goto <bb [0-9]+>")
+switch_re = re.compile ("switch \([^)<]+\) <.*>$")
 
 def process_line (line):
     """Process a line in the assembly input"""
@@ -41,7 +42,7 @@ def process_line (line):
         label = line[:ci]
         if (gcclabel_re.match (label)):
             if (not hadgoto):
-                edges.append ((curbb, label, False))
+                edges.append ((curbb, label, 0))
 #                print "IMPLICIT GOTO  to %s" % label
                 if no_statements == 0:
                     empty_bbs.add (curbb)
@@ -63,14 +64,24 @@ def process_line (line):
                 availbbs.add (curbb);
                 bbs.append (curbb);
                 pass
-            pass
+            return
         pass
 
     no_statements = no_statements + 1
 
     if (goto_re.match (line)):
         target = line[5:].rstrip(";")
-        truelabel = not hadgoto
+
+        pi = target.find("(");
+        if (pi <> -1):
+#            sys.stderr.write ("WEIRD TARGET %s\n" % target)
+            target = target[pi+1:-1]
+            pass
+        
+        if hadgoto:
+            truelabel = 0
+        else:
+            truelabel = 1
         if (hadgoto):
             condbbs.add (curbb)
 #            print "   BB %s marked as ending with a condition" % curbb
@@ -78,11 +89,24 @@ def process_line (line):
         edges.append ((curbb, target, truelabel));
 #        print "GOTO %s, truelabel: %s" % (target, truelabel)
         hadgoto = True
-        pass
+        return
 
+    if (switch_re.match (line)):
+#        sys.stderr.write ("PROCESSING SWITCH %s\n" % line)
+        pi = line.find ("<")
+        cls = line[pi+1:-1]
+        cl = cls.split(",")
+        for c in cl:
+            l = c[c.find(":")+1:].strip()
+            edges.append ((curbb, l, 2));
+            continue
+        condbbs.add (curbb)
+        hadgoto = True
+        return
+    
     if line.find ("return") == 0:
         hadgoto = True;
-        pass
+        return
     return
 
 def print_bbs ():
@@ -91,10 +115,10 @@ def print_bbs ():
 
     for bb in bbs:
         if bb in empty_bbs:
-            attrs = '[style=filled, fillcolor=yellow, label="%s|  ?"];' % bb
+            attrs = '[style=filled, fillcolor=yellow, label="%s"];' % bb
             pass
         else:
-            attrs = '[label="%s|  ?"];' % bb
+            attrs = '[label="%s"];' % bb
             pass
         print ('\t"%s"' % bb) + attrs
 
@@ -105,11 +129,14 @@ def print_edges ():
 
     for src, dst, tl in edges:
         if (src in condbbs):
-            if tl:
-                label = "true"
-            else:
+            if tl == 0:
                 label = "false"
-
+            elif tl == 1:
+                label = "true"
+            elif tl == 2:
+                label = "switch"
+            else:
+                label = "unknown type"
             print '\t"%s" -> "%s" [taillabel="%s"];' % (src, dst, label)
         else:
             print '\t"%s" -> "%s";' % (src, dst);

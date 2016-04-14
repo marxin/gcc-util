@@ -47,6 +47,7 @@ Options:
 -b            Do bootstrap.  Bootstrap is otherwise only performed if the 
               current directory name is "b-obj".
 -n            Do not bootstrap whatever the name of the current directory is.
+-w            Pass --disable-werror
 
 --hsa         Pass --enable-offload-targets=hsa
 -r            Release checking instead of default "all" checking.
@@ -156,7 +157,7 @@ def main():
     
     # ----- Process arguments -----
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hadogcpfbnrz",
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hadogcpfbnwrz",
                                        ["help", "fort", "ada", "no-java",
                                         "go", "no-ada", "fold", "no-san",
                                         "san", "memstat", "vgrind",
@@ -200,6 +201,8 @@ def main():
             bootstrap = True
         elif o == "-n":
             bootstrap = False
+        elif o == "-w":
+            other_flags = other_flags + " --disable-werror"
         elif o == "-r":
             checking = "release"
         elif o == "-z":

@@ -114,7 +114,7 @@ class GccTester:
         text = MIMEText(text, "plain", "utf-8")
         msg.attach(text)
 
-        sender = 'mliska+tester@suse.cz'
+        sender = 'mliska+tester@foxlink.cz'
         recipient = 'mliska@suse.cz'
 
         msg['Subject'] = 'GCC tester email: %s (%s vs. %s)' % ('FAILURE' if failure else 'SUCCESS', self.revision, self.parent)

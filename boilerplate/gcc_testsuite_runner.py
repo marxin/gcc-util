@@ -150,7 +150,7 @@ class GccTester:
         work_folder = self.archive_git(revision)
       else:
         self.log('Git checkout of: ' + revision)
-        r = commands.getstatusoutput('git checkout ' + revision)
+        r = commands.getstatusoutput('git checkout --force ' + revision)
         if r[0] != 0:
           self.err('Could not checkout to tested revision')
 

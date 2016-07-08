@@ -94,13 +94,16 @@ class ChangeLogEntry:
     first = lines[0]
     tokens = first.split(' ')
     self.lines = strip_array(lambda x: x.strip() == '', lines[1:])
+
     self.date = tokens[0]
     self.email = args.email or tokens[-1]
     self.username = args.username or first[first.find(' '):first.rfind(' ')].strip()
 
-  def get_header(self):
-    now = time.strftime('%Y-%m-%d')
-    return '%s  %s  %s' % (now, self.username, self.email)
+    if args.backport_date:
+        self.lines = ['\tBackported from mainline', '\t' + self.get_header(args.backport_date), ''] + self.lines
+
+  def get_header(self, date = time.strftime('%Y-%m-%d')):
+    return '%s  %s  %s' % (date, self.username, self.email)
 
   def get_body(self):
     return '\n'.join(self.lines)
@@ -125,6 +128,7 @@ parser.add_argument("-u", "--username", dest="username", help = "commit username
 parser.add_argument("-e", "--email", dest="email", help = "commit email address")
 parser.add_argument("-m", "--message", dest="message", help = "commit message header")
 parser.add_argument("-b", "--branch", dest="branch", help = "SVN branch name")
+parser.add_argument("--backport-date", dest="backport_date", help = "Backport date format")
 parser.add_argument('-s', dest='skip_patch', action='store_true')
 
 args = parser.parse_args()

@@ -19,8 +19,8 @@ class GccTesterError(Exception):
     pass
 
 parallelism = multiprocessing.cpu_count()
-make_cmd = 'make -j' + str(parallelism)
-make_test_cmd = 'make check -k -j' + str(parallelism)
+make_cmd = 'nice make -j' + str(parallelism)
+make_test_cmd = 'nice make check -k -j' + str(parallelism)
 
 def tail(message):
   lines = message.split('\n')

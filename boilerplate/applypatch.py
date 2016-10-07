@@ -122,8 +122,8 @@ class ChangeLogEntry:
     print('ChangeLog entry added: %s' % self.file)
 
 parser = argparse.ArgumentParser()
+parser.add_argument('file', help = 'File with patch')
 parser.add_argument("-d", "--directory", dest="directory", help="SVN repository directory", default = os.getcwd())
-parser.add_argument("-f", "--file", dest="file", help="file with patch", required = True)
 parser.add_argument("-u", "--username", dest="username", help = "commit username")
 parser.add_argument("-e", "--email", dest="email", help = "commit email address")
 parser.add_argument("-m", "--message", dest="message", help = "commit message header")

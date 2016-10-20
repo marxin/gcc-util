@@ -19,6 +19,12 @@ class GccTesterError(Exception):
     pass
 
 parallelism = multiprocessing.cpu_count()
+parallelism_limit = 80
+
+# Limit due to gcc112 machine
+if parallelism > parallelism_limit:
+    parallelism = parallelism_limit
+
 make_cmd = 'nice make -j' + str(parallelism)
 make_test_cmd = 'nice make check -k -j' + str(parallelism)
 

@@ -16,6 +16,9 @@ import tempfile
 
 from itertools import *
 
+username = 'Martin Liska'
+email = 'mliska@suse.cz' 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help = 'File with patch')
 parser.add_argument("-d", "--directory", dest="directory", help="SVN repository directory", default = os.getcwd())
@@ -33,18 +36,21 @@ def strip_array(condition, lines):
 class ChangeLogEntry:
   def __init__(self, file, lines):
     self.file = file
-    self.lines = lines
+    self.lines = list(dropwhile(lambda x: x == '', lines))
+    self.lines = list(reversed(list(dropwhile(lambda x: x == '', reversed(lines)))))
 
     if args.branch != None:
         self.file += '.' + args.branch
 
     assert len(self.lines) > 2
-    assert self.lines[1] == ''
 
     if args.backport:
-        header = self.lines.pop(0)
-        self.lines.pop(0)
-        to_add = ['%s  Martin Liska  <mliska@suse.cz>' % datetime.datetime.now().strftime('%Y-%m-%d'), '', '\tBackport from mainline', '\t' + header]
+        header_lines = ['\t' + x for x in takewhile(lambda x: x != '', self.lines)]
+
+        # skip header and also one empty line
+        self.lines = self.lines[len(header_lines) + 1:]
+        l = '%s  %s  <%s>' % (datetime.datetime.now().strftime('%Y-%m-%d'), username, email)
+        to_add = [l, '', '\tBackport from mainline'] + header_lines + ['']
         self.lines = to_add + self.lines
 
   def get_body(self):
@@ -75,7 +81,7 @@ class Patch:
             assert file_name.endswith('ChangeLog:')
             lines = lines[1:]
             chunk = list(takewhile(lambda x: not x.endswith('ChangeLog:'), lines))
-            changelog_entries.append(ChangeLogEntry(file_name, chunk))
+            changelog_entries.append(ChangeLogEntry(file_name.rstrip(':'), chunk))
             lines = lines[len(chunk):]
 
         return changelog_entries

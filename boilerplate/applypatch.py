@@ -86,13 +86,24 @@ class Patch:
 
         return changelog_entries
 
+    def parse_add_and_removed_files(self, lines):
+        f = lambda x: x.split(' ')[-1][2:]
+        for i, l in enumerate(lines):
+            if l.startswith('new file mode'):
+                self.added_files.append(f(lines[i - 1]))
+            elif l.startswith('deleted file mode'):
+                self.removed_files.append(f(lines[i - 1]))
+
     def __init__(self, args):
         self.patch_path = args.file
         self.temp_patch_file = None
         self.entries = []
+        self.added_files = []
+        self.removed_files = []
 
         lines = [x.rstrip() for x in open(args.file).readlines()]
         lines = list(dropwhile(lambda x: not x.startswith('Subject:'), lines))
+        self.parse_add_and_removed_files(lines)
 
         subject_lines = list(takewhile(lambda x: x != '', lines))
         self.subject = self.set_subject(subject_lines)
@@ -172,12 +183,28 @@ class Patch:
 
             return True
 
+    def manipulate_svn(self):
+        if len(self.added_files) > 0:
+            print('Adding files:')
+            for f in self.added_files:
+                subprocess.check_output(['svn', 'add', os.path.join(self.directory, f)])
+                print(f)
+            print()
+
+        if len(self.removed_files) > 0:
+            print('Removing files:')
+            for f in self.removed_files:
+                subprocess.check_output(['svn', 'rm', os.path.join(self.directory, f)])
+                print(f)
+            print()
+
 patch = Patch(args)
 
 if not args.dry_run:
     if not patch.apply_patch():
         exit(1)
     patch.add_entries()
+    patch.manipulate_svn()
     patch.create_svn_log()
 else:
     patch.apply_patch(True)

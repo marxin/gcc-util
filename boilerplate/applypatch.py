@@ -33,25 +33,34 @@ def strip_array(condition, lines):
   end = len(list(takewhile(condition, reversed(lines))))
   return lines[start:len(lines) - end]
 
+def get_today_timestamp():
+    return datetime.datetime.now().strftime('%Y-%m-%d')
+
 class ChangeLogEntry:
   def __init__(self, file, lines):
     self.file = file
-    self.lines = list(dropwhile(lambda x: x == '', lines))
+    lines = list(dropwhile(lambda x: x == '', lines))
     self.lines = list(reversed(list(dropwhile(lambda x: x == '', reversed(lines)))))
 
     if args.branch != None:
         self.file += '.' + args.branch
 
     assert len(self.lines) > 2
+    assert self.lines[0].startswith('20')
 
     if args.backport:
         header_lines = ['\t' + x for x in takewhile(lambda x: x != '', self.lines)]
 
         # skip header and also one empty line
         self.lines = self.lines[len(header_lines) + 1:]
-        l = '%s  %s  <%s>' % (datetime.datetime.now().strftime('%Y-%m-%d'), username, email)
+        l = '%s  %s  <%s>' % (get_today_timestamp(), username, email)
         to_add = [l, '', '\tBackport from mainline'] + header_lines + ['']
         self.lines = to_add + self.lines
+    else:
+        # update to current date
+        h = self.lines[0]
+        h = get_today_timestamp() + h[h.find(' '):]
+        self.lines[0] = h
 
   def get_body(self):
     return '\n'.join(self.lines)

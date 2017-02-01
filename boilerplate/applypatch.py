@@ -13,11 +13,13 @@ import argparse
 import datetime
 import time
 import tempfile
+import re
 
 from itertools import *
 
 username = 'Martin Liska'
 email = 'mliska@suse.cz' 
+pr_regex = re.compile('.*PR [a-z]+\/([0-9]+).*')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help = 'File with patch')
@@ -109,13 +111,14 @@ class Patch:
         self.entries = []
         self.added_files = []
         self.removed_files = []
+        self.prs = []
 
         lines = [x.rstrip() for x in open(args.file).readlines()]
         lines = list(dropwhile(lambda x: not x.startswith('Subject:'), lines))
         self.parse_add_and_removed_files(lines)
 
         subject_lines = list(takewhile(lambda x: x != '', lines))
-        self.subject = self.set_subject(subject_lines)
+        self.set_subject(subject_lines)
         lines = lines[len(subject_lines):]
 
         if args.backport:
@@ -157,7 +160,40 @@ class Patch:
         if i != -1:
             subject = subject[(i + 1):].strip()
 
-        return subject
+        # parse PR
+        result = pr_regex.match(subject)
+        if result != None:
+            self.prs.append(int(result.groups(1)[0]))
+
+        self.subject = subject
+
+    def verify(self):
+        r = True
+        # parse all new tests whether they are named pr*.*
+        for entry in self.entries:
+            for l in entry.lines:
+                result = re.match('.*[pP][rR]([0-9]+)[^:]*: New test\.', l)
+                if result != None:
+                    self.prs.append(int(result.groups(1)[0]))
+
+        # verify entries
+        for entry in self.entries:
+            found = ()
+            for l in entry.lines:
+                result = pr_regex.match(l)
+                if result != None:
+                    found.add(int(result.groups(1)[0]))
+
+            if len(self.prs) != len(found):
+                r = False
+                print('Missing PR entries for %s: ' % (entry.file), end = '')
+                for pr in self.prs:
+                    if not pr in found:
+                        print('PR%d ' % pr, end = '')
+
+                print()
+
+        return r
 
     def add_entries(self):
         for entry in self.entries:
@@ -212,11 +248,14 @@ patch = Patch(args)
 if not args.dry_run:
     if not patch.apply_patch():
         exit(1)
+    if not patch.verify():
+        exit(2)
     patch.add_entries()
     patch.manipulate_svn()
     patch.create_svn_log()
 else:
     patch.apply_patch(True)
+    patch.verify()
     for entry in patch.entries:
         print(entry.file)
         print(entry.get_body())

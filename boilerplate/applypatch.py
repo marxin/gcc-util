@@ -246,10 +246,10 @@ class Patch:
 patch = Patch(args)
 
 if not args.dry_run:
-    if not patch.apply_patch():
-        exit(1)
     if not patch.verify():
         exit(2)
+    if not patch.apply_patch():
+        exit(1)
     patch.add_entries()
     patch.manipulate_svn()
     patch.create_svn_log()

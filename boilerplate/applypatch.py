@@ -178,7 +178,7 @@ class Patch:
 
         # verify entries
         for entry in self.entries:
-            found = ()
+            found = set()
             for l in entry.lines:
                 result = pr_regex.match(l)
                 if result != None:

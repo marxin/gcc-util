@@ -19,7 +19,7 @@ from itertools import *
 
 username = 'Martin Liska'
 email = 'mliska@suse.cz' 
-pr_regex = re.compile('.*PR [a-z]+\/([0-9]+).*')
+pr_regex = re.compile('.*PR [a-z\-]+\/([0-9]+).*')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help = 'File with patch')
@@ -111,7 +111,7 @@ class Patch:
         self.entries = []
         self.added_files = []
         self.removed_files = []
-        self.prs = []
+        self.prs = set()
 
         lines = [x.rstrip() for x in open(args.file).readlines()]
         lines = list(dropwhile(lambda x: not x.startswith('Subject:'), lines))
@@ -163,7 +163,7 @@ class Patch:
         # parse PR
         result = pr_regex.match(subject)
         if result != None:
-            self.prs.append(int(result.groups(1)[0]))
+            self.prs.add(int(result.groups(1)[0]))
 
         self.subject = subject
 
@@ -174,7 +174,7 @@ class Patch:
             for l in entry.lines:
                 result = re.match('.*[pP][rR]([0-9]+)[^:]*: New test\.', l)
                 if result != None:
-                    self.prs.append(int(result.groups(1)[0]))
+                    self.prs.add(int(result.groups(1)[0]))
 
         # verify entries
         for entry in self.entries:

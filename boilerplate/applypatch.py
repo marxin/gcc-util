@@ -184,7 +184,7 @@ class Patch:
                 if result != None:
                     found.add(int(result.groups(1)[0]))
 
-            if len(self.prs) != len(found):
+            if len(self.prs) > len(found):
                 r = False
                 print('Missing PR entries for %s: ' % (entry.file), end = '')
                 for pr in self.prs:

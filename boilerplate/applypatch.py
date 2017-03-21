@@ -121,36 +121,8 @@ class Patch:
         self.set_subject(subject_lines)
         lines = lines[len(subject_lines):]
 
-        if args.backport:
-            lines = list(dropwhile(lambda x: not x.startswith('diff '), lines))
-
-            # find all diff hunk having a ChangeLog entry
-            with tempfile.NamedTemporaryFile(delete = False) as f:
-                self.temp_patch_file = f.name
-                while len(lines) > 0:
-                    fn = lambda x: x.startswith('diff ') and x.endswith('ChangeLog')
-
-                    # write content different from ChangeLog hunks to temporary patch file
-                    to_skip = list(takewhile(lambda x: not fn(x), lines))
-                    f.write('\n'.join(to_skip).encode('utf-8'))
-                    lines = lines[len(to_skip):]
-
-                    if len(lines) == 0:
-                        break
-
-                    # create ChangeLog entry
-                    filename = lines[0]
-                    filename = filename[filename.find(' b/') + 3:]
-                    lines = lines[1:]
-
-                    chunk = list(takewhile(lambda x: not x.startswith('diff ') and x != '--', lines))
-                    self.entries.append(ChangeLogEntry(filename, [x[1:] for x in chunk if x.startswith('+') and not x.startswith('+++')]))
-
-                    lines = lines[len(chunk):]
-
-        else:
-            text = list(takewhile(lambda x: x != '---', lines))
-            self.entries = Patch.parse_lines(text)
+        text = list(takewhile(lambda x: x != '---', lines))
+        self.entries = Patch.parse_lines(text)
 
         self.directory = args.directory
 

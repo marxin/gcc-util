@@ -51,37 +51,16 @@ class GccTester:
             self.err('Git fetch has failed', False)
 
         self.revision = self.get_sha1_for_revision(revision)
-        if options.parent != None:
-            self.parent = self.get_sha1_for_revision(options.parent)
-        else:
-            self.parent = self.get_sha1_for_revision(self.revision + '^')
+        self.parent = self.get_sha1_for_revision(self.revision + '^')
 
         self.revision_log_message = self.get_log_message(revision)
         self.parent_log_message = self.get_log_message(self.parent)
-
-        # create folders
-        self.tester_folder = os.path.join(self.folder, 'tester')
-        self.logs_folder = os.path.join(self.tester_folder, 'logs')
-        self.reports_folder = os.path.join(self.tester_folder, 'reports')
-
-        if not os.path.exists(self.logs_folder):
-            os.makedirs(self.logs_folder)
-        if not os.path.exists(self.reports_folder):
-            os.makedirs(self.reports_folder)
-
-        self.report_file = os.path.join(self.reports_folder, self.revision + '_' + self.parent + '.log')
-
         self.log('Paralellism: ' + str(parallelism))
-        self.log('Report file: ' + self.report_file)
 
     def process_revision(self, revision, configure_cmd):
         self.log('Processing revision: %s' % revision)
-        if os.path.exists(os.path.join(self.logs_folder, revision)):
-            self.log('Skipping build, already in log cache')
-        else:
-            work_folder = self.prepare_revision(revision)
-            self.compile_and_test(work_folder, configure_cmd)
-            self.extract_logs(work_folder, revision)
+        work_folder = self.prepare_revision(revision)
+        self.compile_and_test(work_folder, configure_cmd)
 
     def log(self, message, add_time = True):
         s = message
@@ -189,56 +168,27 @@ class GccTester:
         self.log('Test process has been started')
         r = commands.getstatusoutput(make_test_cmd)
 
-    def extract_logs(self, workdir, revision):
-        objdir = os.path.join(workdir, 'objdir')
-        os.chdir(objdir)
+    def report_failures(self):
+        r = subprocess.check_output("find gcc/testsuite/ -name '*.log' | xargs cat", encoding = 'utf8')
+        lines = [x.strip() for x in r]
 
-        logs_folder = os.path.join(self.logs_folder, revision)
-        if not os.path.exists(logs_folder):
-            os.makedirs(logs_folder)
+        failures = [x for x in lines if x.startswith('FAIL')]
+        xfail_count = len([x for x in lines if x.startswith('XFAIL')])
+        pass_count = len([x for x in lines if x.startswith('PASS')])
 
-        r = commands.getstatusoutput('_extr_sums ' + logs_folder)
-        if r[0] != 0:
-            self.err('Could not extract sums: ' + r[1])
-
-        os.chdir(os.path.join(objdir, 'gcc', 'testsuite'))
-
-        r = commands.getstatusoutput('_extr_logs ' + logs_folder)
-        if r[0] != 0:
-            self.err('Could not extract logs: ' + r[1])
-
-        os.chdir(objdir)
-
-    def compare_logs(self, r1, r2):
-        f1 = os.path.join(self.logs_folder, r1)
-        os.chdir(f1)
-
-        f2 = os.path.join(self.logs_folder, r2)
-
-        r = commands.getstatusoutput('_compare_sums %s' % (f2))
-        if r[0] != 0:
-            self.err('Could not compare logs: ' + r[1])
-
-        return r[1]
+        self.log('PASS count: %d' % pass_count)
+        self.log('XFAIL count: %d' % xfail_count)
+        self.log('FAIL count: %d' % len(failures))
+        self.messages += ['Compare logs', '\n'.join(failures)]
 
     def run(self):
         # core of the script
-        self.process_revision(self.revision, self.configure_cmd + self.default_options + self.extra_configuration)
-        self.process_cleanup()
-        self.process_revision(self.parent, self.configure_cmd + self.default_options + ['--disable-bootstrap', '--enable-checking=release'])
-
-        diff = self.compare_logs(self.revision, self.parent)
-
-        with open(self.report_file, 'w+') as f:
-          f.write(diff)
-
-        f.close()
-
+        failures = self.process_revision(self.revision, self.configure_cmd + self.default_options + self.extra_configuration)
         self.process_cleanup()
 
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
-        self.messages += ['Compare logs', diff]
+        self.report_failures()
         self.send_email(False)
 
 gcc = None
@@ -253,11 +203,10 @@ signal.signal(signal.SIGINT, signal_handler)
 
 parser = OptionParser()
 parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
-parser.add_option("-r", "--revision", dest="revision", help="git revision")
-parser.add_option("-p", "--parent-revision", dest="parent", help="parent git revision")
+parser.add_option("-r", "--revisions", dest="revision", help="git revisions")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")
-parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options (not used by parent), separated by comma")
+parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options, separated by comma")
 
 (options, args) = parser.parse_args()
 

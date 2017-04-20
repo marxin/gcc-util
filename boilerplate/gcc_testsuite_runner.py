@@ -169,7 +169,7 @@ class GccTester:
         r = commands.getstatusoutput(make_test_cmd)
 
     def report_failures(self):
-        r = subprocess.check_output("find gcc/testsuite/ -name '*.log' | xargs cat").decode('utf8')
+        r = subprocess.check_output("find gcc/testsuite/ -name '*.log' | xargs cat", shell = True).decode('utf8')
         lines = [x.strip() for x in r]
 
         failures = [x for x in lines if x.startswith('FAIL')]

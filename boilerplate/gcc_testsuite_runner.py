@@ -176,8 +176,8 @@ class GccTester:
         lines = r.split('\n')
 
         failures = [x for x in lines if x.startswith('FAIL')]
-        known_failures = [x for x in failures if any([x in y for y in ignored])]
-        failures = [x for x in failures if not any([x in y for y in ignored])]
+        known_failures = [x for x in failures if any([y in x for y in ignored])]
+        failures = [x for x in failures if not any([y in x for y in ignored])]
         xfail_count = len([x for x in lines if x.startswith('XFAIL')])
         pass_count = len([x for x in lines if x.startswith('PASS')])
 

@@ -169,8 +169,9 @@ class GccTester:
         r = commands.getstatusoutput(make_test_cmd)
 
     def report_failures(self):
+        self.log('Running find in: %s' % os.path.abspath('.'))
         r = subprocess.check_output("find gcc/testsuite/ -name '*.log' | xargs cat", shell = True).decode('utf8')
-        lines = [x.strip() for x in r]
+        lines = r.split('\n')
 
         failures = [x for x in lines if x.startswith('FAIL')]
         xfail_count = len([x for x in lines if x.startswith('XFAIL')])
@@ -183,13 +184,13 @@ class GccTester:
 
     def run(self):
         # core of the script
-        failures = self.process_revision(self.revision, self.configure_cmd + self.default_options + self.extra_configuration)
-        self.process_cleanup()
+        self.process_revision(self.revision, self.configure_cmd + self.default_options + self.extra_configuration)
 
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
         self.report_failures()
         self.send_email(False)
+        self.process_cleanup()
 
 gcc = None
 

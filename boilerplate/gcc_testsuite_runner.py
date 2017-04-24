@@ -28,7 +28,7 @@ if parallelism > parallelism_limit:
 make_cmd = 'nice make -j' + str(parallelism)
 make_test_cmd = 'nice make check -k -j' + str(parallelism)
 
-ignored = ['guality/nrv-1.c',  'guality/param-2.c', 'guality/param-3.c', 'guality/pr36728-1.c', 'guality/pr36728-2.c', 'guality/pr41353-1.c', 'guality/pr41616-1.c', 'guality/pr43051-1.c', 'guality/pr45882.c', 'guality/pr54200.c', 'guality/pr54519-1.c', 'guality/pr54519-2.c', 'guality/pr54519-3.c', 'guality/pr54519-4.c', 'guality/pr54519-5.c', 'guality/pr54551.c', 'guality/pr54693-2.c', 'guality/pr54693.c', 'guality/pr58791-2.c', 'guality/pr68860-1.c', 'guality/pr78726.c', 'guality/sra-1.c', 'guality/vla-1.c']
+ignored = ['guality/nrv-1.c',  'guality/param-2.c', 'guality/param-3.c', 'guality/pr36728-1.c', 'guality/pr36728-2.c', 'guality/pr41353-1.c', 'guality/pr41616-1.c', 'guality/pr43051-1.c', 'guality/pr45882.c', 'guality/pr54200.c', 'guality/pr54519-1.c', 'guality/pr54519-2.c', 'guality/pr54519-3.c', 'guality/pr54519-4.c', 'guality/pr54519-5.c', 'guality/pr54551.c', 'guality/pr54693-2.c', 'guality/pr54693.c', 'guality/pr58791-2.c', 'guality/pr68860-1.c', 'guality/pr78726.c', 'guality/sra-1.c', 'guality/vla-1.c', 'gfortran.dg/ieee/large_2.f90', 'g++.dg/tls/thread_local-order2.C']
 
 # TODO: eventually remove
 ignored += [', not ', ' is not computable', ' UNRESOLVED']

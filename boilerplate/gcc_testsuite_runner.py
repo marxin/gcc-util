@@ -188,8 +188,8 @@ class GccTester:
         self.log('XFAIL count: %d' % xfail_count)
         self.log('FAIL count: %d' % len(failures))
         self.messages += ['=== FAILURES ===', '\n'.join(failures)]
-        self.log('Known false FAIL count: %d' % len(known_failures))
-        self.messages += ['\n\n=== FALSE positive failures ===', '\n'.join(known_failures)]
+        self.log('\n\nKnown false FAIL count: %d' % len(known_failures))
+        self.messages += ['=== FALSE positive failures ===', '\n'.join(known_failures)]
 
     def run(self):
         # core of the script

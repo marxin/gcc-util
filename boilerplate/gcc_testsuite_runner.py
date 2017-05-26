@@ -53,10 +53,8 @@ class GccTester:
             self.err('Git fetch has failed', False)
 
         self.revision = self.get_sha1_for_revision(revision)
-        self.parent = self.get_sha1_for_revision(self.revision + '^')
 
         self.revision_log_message = self.get_log_message(revision)
-        self.parent_log_message = self.get_log_message(self.parent)
         self.log('Paralellism: ' + str(parallelism))
 
     def process_revision(self, revision, configure_cmd):
@@ -104,7 +102,7 @@ class GccTester:
         sender = 'mliska+tester@foxlink.cz'
         recipient = 'mliska@suse.cz'
 
-        msg['Subject'] = 'GCC tester email: %s (%s vs. %s)' % ('FAILURE' if failure else 'SUCCESS', self.revision, self.parent)
+        msg['Subject'] = 'GCC tester email: %s (%s)' % ('FAILURE' if failure else 'SUCCESS', self.revision)
         msg['From'] = sender
         msg['To'] = recipient
 

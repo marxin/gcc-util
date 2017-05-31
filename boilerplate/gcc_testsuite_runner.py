@@ -28,7 +28,7 @@ if parallelism > parallelism_limit:
 make_cmd = 'nice make -j' + str(parallelism)
 make_test_cmd = 'nice make check -k -j' + str(parallelism)
 
-ignored = ['guality/', 'gfortran.dg/ieee/large_2.f90', 'g++.dg/tls/thread_local-order2.C']
+ignored = ['guality/', 'gfortran.dg/ieee/large_2.f90', 'g++.dg/tls/thread_local-order2.C', 'Testcase exceeded maximum instruction count threshold']
 
 def tail(message):
   lines = message.split('\n')

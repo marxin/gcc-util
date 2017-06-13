@@ -30,6 +30,13 @@ make_test_cmd = 'nice make check -k -j' + str(parallelism)
 
 ignored = ['guality/', 'gfortran.dg/ieee/large_2.f90', 'g++.dg/tls/thread_local-order2.C', 'Testcase exceeded maximum instruction count threshold']
 
+# temporary - hopefully
+ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thread/atomic-other-short.c', 'gcc.dg/sms-1.c', 'gcc.dg/vect/costmodel/ppc/costmodel-pr37194.c',
+        'gcc.dg/vect/no-section-anchors-vect-69.c', 'gcc.dg/vect/section-anchors-vect-69.c', 'gcc.dg/vect/slp-perm-9.c', 'gcc.dg/vect/vect-28.c', 'gcc.dg/vect/vect-33-big-array.c',
+        'gcc.dg/vect/vect-70.c', 'gcc.dg/vect/vect-87.c', 'gcc.dg/vect/vect-88.c', 'gcc.dg/vect/vect-91.c', 'gcc.dg/vect/vect-93.c',
+        'gcc.target/powerpc/bool3-p7.c', 'gcc.target/powerpc/bool3-p8.c', 'gfortran.dg/elemental_subroutine_3.f90', 'gfortran.dg/vect/vect-2.f90',
+        'gfortran.dg/vect/vect-3.f90', 'gfortran.dg/vect/vect-4.f90', 'gfortran.dg/vect/vect-5.f90', 'go.test/test/ken/cplx2.go']
+
 def tail(message):
   lines = message.split('\n')
   return '\n'.join(lines[-50:])
@@ -160,6 +167,9 @@ class GccTester:
             self.err('Could not configure GCC: ' + r[1])
 
         self.log('Build process has been started')
+        if args.fast:
+            make_cmd += ' STAGE1_CFLAGS="-O2"'
+
         r = commands.getstatusoutput(make_cmd)
 
         if r[0] != 0:
@@ -212,6 +222,7 @@ parser.add_option("-r", "--revisions", dest="revision", help="git revisions")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")
 parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options, separated by comma")
+parser.add_option("-f", "--fast", help = "Build stage1 compiler with -O2")
 
 (options, args) = parser.parse_args()
 

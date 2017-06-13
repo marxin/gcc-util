@@ -167,6 +167,7 @@ class GccTester:
             self.err('Could not configure GCC: ' + r[1])
 
         self.log('Build process has been started')
+        global make_cmd
         if options.fast:
             make_cmd += ' STAGE1_CFLAGS="-O2"'
 

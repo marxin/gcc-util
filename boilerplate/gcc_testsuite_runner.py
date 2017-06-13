@@ -201,6 +201,7 @@ class GccTester:
         self.messages += ['=== FAILURES ===', '\n'.join(failures)]
         self.messages += ['\n\nKnown false FAIL count: %d' % len(known_failures)]
         self.messages += ['=== FALSE positive failures ===', '\n'.join(known_failures)]
+        return failures
 
     def run(self):
         # core of the script
@@ -208,7 +209,7 @@ class GccTester:
 
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
-        self.report_failures()
+        failures = self.report_failures()
         self.send_email(False, len(failures))
         self.process_cleanup()
 

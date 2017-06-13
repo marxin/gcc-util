@@ -35,7 +35,8 @@ ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thre
         'gcc.dg/vect/no-section-anchors-vect-69.c', 'gcc.dg/vect/section-anchors-vect-69.c', 'gcc.dg/vect/slp-perm-9.c', 'gcc.dg/vect/vect-28.c', 'gcc.dg/vect/vect-33-big-array.c',
         'gcc.dg/vect/vect-70.c', 'gcc.dg/vect/vect-87.c', 'gcc.dg/vect/vect-88.c', 'gcc.dg/vect/vect-91.c', 'gcc.dg/vect/vect-93.c',
         'gcc.target/powerpc/bool3-p7.c', 'gcc.target/powerpc/bool3-p8.c', 'gfortran.dg/elemental_subroutine_3.f90', 'gfortran.dg/vect/vect-2.f90',
-        'gfortran.dg/vect/vect-3.f90', 'gfortran.dg/vect/vect-4.f90', 'gfortran.dg/vect/vect-5.f90', 'go.test/test/ken/cplx2.go']
+        'gfortran.dg/vect/vect-3.f90', 'gfortran.dg/vect/vect-4.f90', 'gfortran.dg/vect/vect-5.f90', 'go.test/test/ken/cplx2.go',
+        'gcc.dg/ipa/iinline-attr.c']
 
 def tail(message):
   lines = message.split('\n')
@@ -99,7 +100,7 @@ class GccTester:
     def get_log_message(self, revision):
         return subprocess.check_output(['git', 'log', '-n1', revision]).strip()
 
-    def send_email(self, failure = False):
+    def send_email(self, failure = False, failed_tests = 0):
         msg = MIMEMultipart("alternative")
 
         text = '\n'.join(self.messages)
@@ -109,7 +110,11 @@ class GccTester:
         sender = 'mliska+tester@foxlink.cz'
         recipient = 'mliska@suse.cz'
 
-        msg['Subject'] = 'GCC tester email: %s (%s)' % ('FAILURE' if failure else 'SUCCESS', self.revision)
+        subject = 'GCC tester email (%s): %s ' % (self.revision, 'FAILURE' if failure else 'SUCCESS')
+        if not failure:
+            subject += 'ALL TEST PASSED' if failed_tests == 0 else '%d TESTS FAILED' % failed_tests
+
+        msg['Subject'] = subject
         msg['From'] = sender
         msg['To'] = recipient
 
@@ -204,7 +209,7 @@ class GccTester:
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
         self.report_failures()
-        self.send_email(False)
+        self.send_email(False, len(failures))
         self.process_cleanup()
 
 gcc = None

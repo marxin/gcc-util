@@ -222,7 +222,7 @@ parser.add_option("-r", "--revisions", dest="revision", help="git revisions")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")
 parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options, separated by comma")
-parser.add_option("-f", "--fast", help = "Build stage1 compiler with -O2")
+parser.add_option("-x", "--fast", help = "Build stage1 compiler with -O2")
 
 (options, args) = parser.parse_args()
 

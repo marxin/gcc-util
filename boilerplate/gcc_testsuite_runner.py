@@ -110,7 +110,7 @@ class GccTester:
         sender = 'mliska+tester@foxlink.cz'
         recipient = 'mliska@suse.cz'
 
-        subject = 'GCC tester email (%s): %s ' % (self.revision, 'FAILURE' if failure else 'SUCCESS')
+        subject = 'Revision %s: %s : ' % (self.revision, 'FAILURE' if failure else 'SUCCESS')
         if not failure:
             subject += 'ALL TEST PASSED' if failed_tests == 0 else '%d TESTS FAILED' % failed_tests
 

@@ -19,7 +19,7 @@ class GccTesterError(Exception):
     pass
 
 parallelism = multiprocessing.cpu_count()
-parallelism_limit = 80
+parallelism_limit = 60
 
 # Limit due to gcc112 machine
 if parallelism > parallelism_limit:

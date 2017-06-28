@@ -44,6 +44,7 @@ def tail(message):
 
 class GccTester:
     def __init__(self, revision, options):
+        self.original_revision = revision
         self.folder = options.folder
         self.temp = options.temp
         self.messages = []
@@ -110,7 +111,7 @@ class GccTester:
         sender = 'mliska+tester@foxlink.cz'
         recipient = 'mliska@suse.cz'
 
-        subject = 'Revision %s: %s : ' % (self.revision, 'FAILURE' if failure else 'SUCCESS')
+        subject = 'GCC tester: %s: %s : ' % (self.original_revision, 'FAILURE' if failure else 'SUCCESS')
         if not failure:
             subject += 'ALL TEST PASSED' if failed_tests == 0 else '%d TESTS FAILED' % failed_tests
 

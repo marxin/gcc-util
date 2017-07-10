@@ -38,7 +38,7 @@ ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thre
         'gfortran.dg/vect/vect-3.f90', 'gfortran.dg/vect/vect-4.f90', 'gfortran.dg/vect/vect-5.f90', 'go.test/test/ken/cplx2.go',
         'gcc.dg/ipa/iinline-attr.c', 'gcc.c-torture/execute/pr51581-1.c', 'gcc.c-torture/execute/pr51581-2.c', 'gcc.c-torture/execute/pr53645.c',
         'gcc.dg/vect/pr51581-1.c', 'gcc.dg/vect/pr51581-2.c', 'gcc.dg/vect/pr51581-3.c', 'gcc.dg/vect/pr65947-14.c', 'gcc.dg/vect/pr65947-9.c', 'gcc.dg/pr21643.c',
-        'gcc.dg/tree-ssa/phi-opt-11.c']
+        'gcc.dg/tree-ssa/phi-opt-11.c', 'gcc.target/powerpc/builtins-1-p9-runnable.c']
 
 def tail(message):
   lines = message.split('\n')

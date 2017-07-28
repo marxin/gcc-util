@@ -190,7 +190,7 @@ class GccTester:
 
     def report_failures(self):
         self.log('Running find in: %s' % os.path.abspath('.'))
-        r = subprocess.check_output("find gcc/testsuite/ -name '*.log' | xargs cat", shell = True).decode('utf8')
+        r = subprocess.check_output("find gcc/testsuite/ -name '*.log' | xargs cat", shell = True).decode('utf8', 'ignore')
         lines = r.split('\n')
 
         failures = sorted([x for x in lines if x.startswith('FAIL')])

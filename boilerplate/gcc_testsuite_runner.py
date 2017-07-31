@@ -205,6 +205,10 @@ class GccTester:
         self.messages += ['=== FAILURES ===', '\n'.join(failures)]
         self.messages += ['\n\nKnown false FAIL count: %d' % len(known_failures)]
         self.messages += ['=== FALSE positive failures ===', '\n'.join(known_failures)]
+
+        if options.verbose:
+            print('\n=== FAILURES ===\n' +'\n'.join(failures))
+
         return failures
 
     def run(self):
@@ -234,6 +238,7 @@ parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /d
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")
 parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options, separated by comma")
 parser.add_option("-x", "--fast", action = 'store_true', help = "Build stage1 compiler with -O2")
+parser.add_option("-v", "--verbose", action = 'store_true', help = "Verbose error reporting")
 
 (options, args) = parser.parse_args()
 

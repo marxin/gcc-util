@@ -2,19 +2,34 @@
 
 TMPDIR=/dev/shm/gcc-objdir
 LOG=/tmp/gcc.log
-BINDIR=/home/marxin/bin/gcc2
+SOURCE=~/Programming/gcc2
+
+function clean {
+  cd $SOURCE
+  git checkout --force
+}
+
+# apply patch
+clean
+patch -p1 < /tmp/p
 
 rm -rf $TMPDIR
 mkdir $TMPDIR
 cd $TMPDIR
 
-~/Programming/gcc2/configure --enable-languages=c,c++ --disable-bootstrap --disable-libsanitizer --target=s390x-linux-gnu &>> $LOG || exit 255 
+date
+$SOURCE/configure --enable-languages=c,c++ --disable-bootstrap --disable-libsanitizer --target=m32c-rtems &>> $LOG || exit 255 
 make -j9 CXXFLAGS="-O0 -fpermissive" CFLAGS="-O0" all-host &>> $LOG || exit 125
+date
 
-$TMPDIR/gcc/xg++ -B$TMPDIR/gcc /home/marxin/Programming/gcc/gcc/testsuite/g++.dg/abi/nvptx-nrv1.C -fno-early-inlining -Os  2>&1 | grep 'internal compiler error'
+$TMPDIR/gcc/xgcc -B$TMPDIR/gcc /tmp/main.c ~/Programming/testcases/pr64546.c -mcpu=m32cm -Os -c 2>&1 | grep 'internal compiler error'
 
 if test $? = 0; then
+  echo ICE
+  clean
   exit 1
 fi
 
+echo OK
+clean
 exit 0

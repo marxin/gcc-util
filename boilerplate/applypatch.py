@@ -19,7 +19,7 @@ from itertools import *
 
 username = 'Martin Liska'
 email = 'mliska@suse.cz' 
-pr_regex = re.compile('.*PR [a-z\-]+\/([0-9]+).*')
+pr_regex = re.compile('.*PR [a-z\-\+]+\/([0-9]+).*')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help = 'File with patch')

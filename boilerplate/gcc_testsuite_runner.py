@@ -40,7 +40,8 @@ ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thre
         'gcc.dg/vect/pr51581-1.c', 'gcc.dg/vect/pr51581-2.c', 'gcc.dg/vect/pr51581-3.c', 'gcc.dg/vect/pr65947-14.c', 'gcc.dg/vect/pr65947-9.c', 'gcc.dg/pr21643.c',
         'gcc.dg/tree-ssa/phi-opt-11.c', 'gcc.target/powerpc/builtins-1-p9-runnable.c', 'gcc.dg/pr56727-2.c', 'gcc.target/powerpc/loop_align.c', 'gcc.target/powerpc/mmx-packuswb-1.c',
         'gcc.target/powerpc/pr79439.c', 'g++.dg/debug/debug9.C', 'gcc.target/i386/pr59501-3a.c', 'gcc.target/i386/pr70021.c', 'g++.dg/asan/asan_globals_test-wrapper.cc',
-        'g++.dg/asan/asan_globals_test.cc', 'g++.dg/asan/asan_oob_test.cc', 'g++.dg/asan/asan_test.cc', 'g++.dg/asan/asan_mem_test.cc', 'gcc.target/powerpc/float128-type-1.c']
+        'g++.dg/asan/asan_globals_test.cc', 'g++.dg/asan/asan_oob_test.cc', 'g++.dg/asan/asan_test.cc', 'g++.dg/asan/asan_mem_test.cc', 'gcc.target/powerpc/float128-type-1.c',
+        'gcc.target/powerpc/pr82015.c']
 
 def tail(message):
   lines = message.split('\n')

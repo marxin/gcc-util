@@ -199,15 +199,14 @@ class GccTester:
         known_failures = [x for x in failures if any([y in x for y in ignored])]
         failures = [x for x in failures if not any([y in x for y in ignored])]
         xfail_count = len([x for x in lines if x.startswith('XFAIL')])
-        passes = [x for x in lines if x.startswith('PASS')]
+        pass_count = len([x for x in lines if x.startswith('PASS')])
 
-        self.log('PASS count: %d' % len(passes))
+        self.log('PASS count: %d' % pass_count)
         self.log('XFAIL count: %d' % xfail_count)
         self.log('FAIL count: %d' % len(failures))
         self.messages += ['=== FAILURES ===', '\n'.join(failures)]
         self.messages += ['\n\nKnown false FAIL count: %d' % len(known_failures)]
         self.messages += ['=== FALSE positive failures ===', '\n'.join(known_failures)]
-        self.messages += ['=== PASSES ===', '\n'.join(passes)]
 
         if options.verbose:
             print('\n=== FAILURES ===\n' +'\n'.join(failures))

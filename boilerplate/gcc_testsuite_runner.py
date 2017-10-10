@@ -41,7 +41,7 @@ ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thre
         'gcc.dg/tree-ssa/phi-opt-11.c', 'gcc.target/powerpc/builtins-1-p9-runnable.c', 'gcc.dg/pr56727-2.c', 'gcc.target/powerpc/loop_align.c', 'gcc.target/powerpc/mmx-packuswb-1.c',
         'gcc.target/powerpc/pr79439.c', 'g++.dg/debug/debug9.C', 'gcc.target/i386/pr59501-3a.c', 'gcc.target/i386/pr70021.c', 'g++.dg/asan/asan_globals_test-wrapper.cc',
         'g++.dg/asan/asan_globals_test.cc', 'g++.dg/asan/asan_oob_test.cc', 'g++.dg/asan/asan_test.cc', 'g++.dg/asan/asan_mem_test.cc', 'gcc.target/powerpc/float128-type-1.c',
-        'gcc.target/powerpc/pr82015.c']
+        'gcc.target/powerpc/pr82015.c', 'c-c++-common/goacc/kernels-double-reduction-n.c', 'c-c++-common/tsan/race_on_mutex.c']
 
 def tail(message):
   lines = message.split('\n')

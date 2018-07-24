@@ -6,7 +6,6 @@ import subprocess
 import commands
 import shutil
 import datetime
-import multiprocessing
 import signal
 
 from optparse import OptionParser
@@ -17,16 +16,6 @@ from email.mime.multipart import MIMEMultipart
 
 class GccTesterError(Exception):
     pass
-
-parallelism = multiprocessing.cpu_count()
-parallelism_limit = 60
-
-# Limit due to gcc112 machine
-if parallelism > parallelism_limit:
-    parallelism = parallelism_limit
-
-make_cmd = 'nice make -j' + str(parallelism)
-make_test_cmd = 'nice make check -k -j' + str(parallelism)
 
 ignored = ['guality/', 'gfortran.dg/ieee/large_2.f90', 'g++.dg/tls/thread_local-order2.C', 'Testcase exceeded maximum instruction count threshold']
 
@@ -57,6 +46,7 @@ class GccTester:
         self.original_revision = revision
         self.folder = options.folder
         self.temp = options.temp
+        self.parallelism = options.parallelism
         self.messages = []
         self.configure_cmd = ['../configure']
         self.to_cleanup = []
@@ -176,7 +166,7 @@ class GccTester:
             self.err('Could not configure GCC: ' + r[1])
 
         self.log('Build process has been started')
-        global make_cmd
+        make_cmd = 'nice make -j' + str(self.parallelism)
         if options.fast:
             make_cmd += ' STAGE1_CFLAGS="-O2"'
 
@@ -186,6 +176,8 @@ class GccTester:
             self.err('Could not build GCC: ' + r[1])
 
         self.log('Test process has been started')
+
+        make_test_cmd = 'nice make check -k -j' + str(self.parallelism)
         r = commands.getstatusoutput(make_test_cmd)
 
     def report_failures(self):
@@ -239,6 +231,7 @@ parser.add_option("-l", "--languages", dest="languages", default = 'all', help =
 parser.add_option("-e", "--extra-configuration", dest="extra_configuration", help = "extra configure options, separated by comma")
 parser.add_option("-x", "--fast", action = 'store_true', help = "Build stage1 compiler with -O2")
 parser.add_option("-v", "--verbose", action = 'store_true', help = "Verbose error reporting")
+parser.add_option("-j", "--parallelism", type = int, help = "Number of cores to be used")
 
 (options, args) = parser.parse_args()
 
@@ -250,6 +243,9 @@ if not options.revision:
 
 if not options.temp:
   parser.error('temp not specified')
+
+if not options.parallelism:
+  parser.error('parallelism not specified')
 
 if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
   err('git folder does not exist')

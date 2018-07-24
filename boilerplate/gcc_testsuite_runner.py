@@ -224,7 +224,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 parser = OptionParser()
-parser.add_option("-f", "folder", dest="folder", help="git repository folder")
+parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
 parser.add_option("-r", "--revisions", dest="revision", help="git revisions")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")

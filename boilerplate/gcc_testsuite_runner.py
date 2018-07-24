@@ -35,7 +35,7 @@ ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thre
         'g++.dg/tree-ssa/pr19476-1.C', 'g++.dg/tree-ssa/pr19476-1.6', 'g++.dg/pr83239.C', 'g++.dg/lto/20091002-1', 'g++.dg/lto/pr64043', 'g++.dg/lto/pr65193', 'g++.dg/lto/pr65302',
         'g++.dg/lto/pr65316', 'g++.dg/lto/pr65549', 'g++.dg/lto/pr65549', 'g++.dg/lto/pr66180', 'g++.dg/lto/pr66705', 'g++.dg/lto/pr68057', 'g++.dg/lto/pr68057', 'g++.dg/lto/pr68057',
         'g++.dg/lto/pr68057', 'g++.dg/lto/pr69077', 'g++.dg/lto/pr69133', 'g++.dg/lto/pr69137', 'g++.dg/lto/pr79000', 'g++.dg/lto/pr81940', 'g++.dg/lto/pr85176',
-        'gcc.dg/strcmpopt_6.c', 'gcc.target/powerpc/builtins-1.c', 'gcc.target/powerpc/p8-vec-xl-xst-v2.c', 'gfortran.dg/lto/pr79108']
+        'gcc.dg/strcmpopt_6.c', 'gcc.target/powerpc/builtins-1.c', 'gcc.target/powerpc/p8-vec-xl-xst-v2.c', 'gfortran.dg/lto/pr79108', 'g++.dg/pr80481.C', 'g++.dg/tree-ssa/pr19476-5.C']
 
 def tail(message):
   lines = message.split('\n')

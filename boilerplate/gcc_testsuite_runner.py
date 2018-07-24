@@ -42,7 +42,11 @@ ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thre
         'gcc.target/powerpc/pr79439.c', 'g++.dg/debug/debug9.C', 'gcc.target/i386/pr59501-3a.c', 'gcc.target/i386/pr70021.c', 'g++.dg/asan/asan_globals_test-wrapper.cc',
         'g++.dg/asan/asan_globals_test.cc', 'g++.dg/asan/asan_oob_test.cc', 'g++.dg/asan/asan_test.cc', 'g++.dg/asan/asan_mem_test.cc', 'gcc.target/powerpc/float128-type-1.c',
         'gcc.target/powerpc/pr82015.c', 'c-c++-common/goacc/kernels-double-reduction-n.c', 'c-c++-common/tsan/race_on_mutex.c', 'gcc.dg/torture/pr52451.c', 'checksyms',
-        'c-c++-common/Warray-bounds-4.c', 'g++.dg/lto/pr83121', 'gcc.target/powerpc/builtins-1-le.c', 'gcc.target/powerpc/pr84014.c', 'gcc.target/powerpc/vsx-vector-7.c']
+        'c-c++-common/Warray-bounds-4.c', 'g++.dg/lto/pr83121', 'gcc.target/powerpc/builtins-1-le.c', 'gcc.target/powerpc/pr84014.c', 'gcc.target/powerpc/vsx-vector-7.c',
+        'g++.dg/tree-ssa/pr19476-1.C', 'g++.dg/tree-ssa/pr19476-1.6', 'g++.dg/pr83239.C', 'g++.dg/lto/20091002-1', 'g++.dg/lto/pr64043', 'g++.dg/lto/pr65193', 'g++.dg/lto/pr65302',
+        'g++.dg/lto/pr65316', 'g++.dg/lto/pr65549', 'g++.dg/lto/pr65549', 'g++.dg/lto/pr66180', 'g++.dg/lto/pr66705', 'g++.dg/lto/pr68057', 'g++.dg/lto/pr68057', 'g++.dg/lto/pr68057',
+        'g++.dg/lto/pr68057', 'g++.dg/lto/pr69077', 'g++.dg/lto/pr69133', 'g++.dg/lto/pr69137', 'g++.dg/lto/pr79000', 'g++.dg/lto/pr81940', 'g++.dg/lto/pr85176',
+        'gcc.dg/strcmpopt_6.c', 'gcc.target/powerpc/builtins-1.c', 'gcc.target/powerpc/p8-vec-xl-xst-v2.c', 'gfortran.dg/lto/pr79108']
 
 def tail(message):
   lines = message.split('\n')
@@ -221,8 +225,8 @@ class GccTester:
         self.log('Commit log', False)
         self.log(self.revision_log_message, False)
         failures = self.report_failures()
-        self.send_email(False, len(failures))
         self.process_cleanup()
+        self.send_email(False, len(failures))
 
 gcc = None
 

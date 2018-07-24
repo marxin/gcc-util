@@ -134,7 +134,7 @@ class GccTester:
         s.quit()
 
     def archive_git(self, revision):
-        target_folder = os.path.join(self.folder, 'gcc_' + revision)
+        target_folder = os.path.join(self.temp, 'gcc_' + revision)
         if not os.path.exists(target_folder):
             os.makedirs(target_folder)
 
@@ -154,15 +154,8 @@ class GccTester:
       os.chdir(self.folder)
       work_folder = self.folder
 
-      if self.temp != None:
-        work_folder = self.archive_git(revision)
-      else:
-        self.log('Git checkout of: ' + revision)
-        r = commands.getstatusoutput('git checkout --force ' + revision)
-        if r[0] != 0:
-          self.err('Could not checkout to tested revision')
-
-      return work_folder
+      assert self.temp != None
+      return self.archive_git(revision)
 
     def compile_and_test(self, workdir, configure_cmd):
         os.chdir(workdir)
@@ -254,6 +247,9 @@ if not options.folder:
 
 if not options.revision:
   parser.error('revision not specified')
+
+if not options.temp:
+  parser.error('temp not specified')
 
 if not os.path.exists(options.folder) or not os.path.isdir(options.folder):
   err('git folder does not exist')

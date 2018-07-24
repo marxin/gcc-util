@@ -64,7 +64,7 @@ class GccTester:
         self.revision = self.get_sha1_for_revision(revision)
 
         self.revision_log_message = self.get_log_message(revision)
-        self.log('Paralellism: ' + str(parallelism))
+        self.log('Paralellism: ' + str(self.parallelism))
 
     def process_revision(self, revision, configure_cmd):
         self.log('Processing revision: %s' % revision)
@@ -224,7 +224,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 parser = OptionParser()
-parser.add_option("-f", "--folder", dest="folder", help="git repository folder")
+parser.add_option("-f", "folder", dest="folder", help="git repository folder")
 parser.add_option("-r", "--revisions", dest="revision", help="git revisions")
 parser.add_option("-t", "--temp", dest="temp", help = "temporary folder (e.g. /dev/shm)")
 parser.add_option("-l", "--languages", dest="languages", default = 'all', help = "specify languages that should be tested")

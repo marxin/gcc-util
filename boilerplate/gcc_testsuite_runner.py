@@ -161,6 +161,9 @@ class GccTester:
         self.log('Changing chroot to folder:' + objdir)
         os.chdir(objdir)
 
+        if options.fast:
+            configure_cmd.append('--disable-libgomp')
+
         self.log('Configure process has been started')
         r = commands.getstatusoutput(' '.join(configure_cmd))
         if r[0] != 0:

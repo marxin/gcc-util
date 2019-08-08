@@ -21,7 +21,7 @@ cd $TMPDIR
 
 date
 $SOURCE/configure --enable-languages=c,c++,fortran --disable-bootstrap --disable-libsanitizer --without-isl --target=ppc-linux-gnu &>> $LOG || exit 255
-nice make -j9 CXXFLAGS="-O0 -fpermissive" CFLAGS="-O0" all-host &>> $LOG || exit 125
+nice make -j`nproc` CXXFLAGS="-O0 -fpermissive" CFLAGS="-O0" all-host &>> $LOG || exit 125
 date
 
 $TMPDIR/gcc/xg++ -B$TMPDIR/gcc $SOURCEFILE $OPTIONS 2>&1 | grep $GREP

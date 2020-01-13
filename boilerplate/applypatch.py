@@ -23,8 +23,8 @@ pr_regex = re.compile('.*PR [a-z\-\+]+\/([0-9]+).*')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help = 'File with patch')
-parser.add_argument("-d", "--directory", dest="directory", help="SVN repository directory", default = os.getcwd())
-parser.add_argument("-b", "--branch", dest="branch", help = "SVN branch name")
+parser.add_argument("-d", "--directory", dest="directory", help="GIT repository directory", default = os.getcwd())
+parser.add_argument("-b", "--branch", dest="branch", help = "GIT branch name")
 parser.add_argument("--backport", action = 'store_true', help = "Backport from mainline")
 parser.add_argument('--dry-run', action='store_true')
 
@@ -180,7 +180,7 @@ class Patch:
             print('', file = log)
             print(bodies, file = log)
 
-        print('SVN commit file has been created: %s' % fullname)
+        print('GIT commit file has been created: %s' % fullname)
 
     def apply_patch(self, dry_run = False):
         f = self.temp_patch_file if self.temp_patch_file != None else self.patch_path

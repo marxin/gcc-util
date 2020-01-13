@@ -67,6 +67,9 @@ class ChangeLogEntry:
   def get_body(self):
     return '\n'.join(self.lines)
 
+  def get_body_without_datetime(self):
+      return '\n'.join(self.lines[2:])
+
   def add_entry(self, folder):
     filename = os.path.join(folder, self.file)
     with open(filename, 'r') as original:
@@ -172,7 +175,7 @@ class Patch:
             entry.add_entry(self.directory)
 
     def create_git_log(self):
-        bodies = '\n'.join(map(lambda x: x.get_body(), self.entries))
+        bodies = '\n'.join(map(lambda x: x.get_body_without_datetime(), self.entries))
 
         fullname = os.path.join(self.directory, 'commit-msg.tmp')
         with open(fullname, 'w') as log:

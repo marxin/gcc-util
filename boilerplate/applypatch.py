@@ -171,7 +171,7 @@ class Patch:
         for entry in self.entries:
             entry.add_entry(self.directory)
 
-    def create_svn_log(self):
+    def create_git_log(self):
         bodies = '\n'.join(map(lambda x: x.get_body(), self.entries))
 
         fullname = os.path.join(self.directory, 'commit-msg.tmp')
@@ -200,18 +200,18 @@ class Patch:
 
             return True
 
-    def manipulate_svn(self):
+    def manipulate_git(self):
         if len(self.added_files) > 0:
             print('Adding files:')
             for f in self.added_files:
-                subprocess.check_output(['svn', 'add', os.path.join(self.directory, f)])
+                subprocess.check_output(['git', 'add', os.path.join(self.directory, f)])
                 print(f)
             print()
 
         if len(self.removed_files) > 0:
             print('Removing files:')
             for f in self.removed_files:
-                subprocess.check_output(['svn', 'rm', os.path.join(self.directory, f)])
+                subprocess.check_output(['git', 'rm', os.path.join(self.directory, f)])
                 print(f)
             print()
 
@@ -223,8 +223,8 @@ if not args.dry_run:
     if not patch.apply_patch():
         exit(1)
     patch.add_entries()
-    patch.manipulate_svn()
-    patch.create_svn_log()
+    patch.manipulate_git()
+    patch.create_git_log()
 else:
     patch.apply_patch(True)
     patch.verify()

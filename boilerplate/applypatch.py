@@ -179,7 +179,7 @@ class Patch:
 
         fullname = os.path.join(self.directory, 'commit-msg.tmp')
         with open(fullname, 'w') as log:
-            print(self.subject, file = log)
+            print(self.subject.replace('Subject: ', ''), file = log)
             print('', file = log)
             print(bodies, file = log)
 

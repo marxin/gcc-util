@@ -183,7 +183,7 @@ class Patch:
             print('', file = log)
             print(bodies, file = log)
 
-        print('GIT commit file has been created: %s' % fullname)
+        subprocess.check_output('git commit -a -F %s' % fullname, shell = True)
 
     def apply_patch(self, dry_run = False):
         f = self.temp_patch_file if self.temp_patch_file != None else self.patch_path

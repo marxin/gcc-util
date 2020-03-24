@@ -3,9 +3,9 @@
 TMPDIR=/dev/shm/gcc-objdir-bisect
 LOG=/tmp/gcc.log
 SOURCE=~/Programming/gcc2
-SOURCEFILE="/home/marxin/Programming/gcc/gcc/testsuite/gfortran.dg/vect/cost-model-pr34445.f"
-OPTIONS="-c -misel -O2 -fstack-protector -funroll-all-loops -fno-sched-pressure -fno-tree-ch -fno-tree-forwprop -fno-tree-ter"
-GREP="fix_reg_equiv_init"
+SOURCEFILE="/home/marxin/Programming/testcases/pr94292.c"
+OPTIONS="-c -O -g -fno-tree-dce"
+GREP="internal compiler"
 
 function clean {
   cd $SOURCE
@@ -14,17 +14,19 @@ function clean {
 
 # apply patch
 clean
+DATE=`git show -s --format=%ci`
 
 rm -rf $TMPDIR
 mkdir $TMPDIR
 cd $TMPDIR
 
 date
-$SOURCE/configure --enable-languages=c,c++,fortran --disable-bootstrap --disable-libsanitizer --without-isl --target=ppc-linux-gnu &>> $LOG || exit 255
+echo "Revision date: $DATE"
+$SOURCE/configure --enable-languages=c,c++,fortran --disable-bootstrap --disable-libsanitizer --target=arm-linux-gnueabi &>> $LOG || exit 255
 nice make -j`nproc` CXXFLAGS="-O0 -fpermissive" CFLAGS="-O0" all-host &>> $LOG || exit 125
 date
 
-$TMPDIR/gcc/xg++ -B$TMPDIR/gcc $SOURCEFILE $OPTIONS 2>&1 | grep $GREP
+$TMPDIR/gcc/xgcc -B$TMPDIR/gcc $SOURCEFILE $OPTIONS 2>&1 | grep "$GREP"
 
 if test $? = 0; then
   echo ICE

@@ -27,6 +27,7 @@ parser.add_argument("-d", "--directory", dest="directory", help="GIT repository 
 parser.add_argument("-b", "--branch", dest="branch", help = "GIT branch name")
 parser.add_argument("--backport", action = 'store_true', help = "Backport from mainline")
 parser.add_argument('--dry-run', action='store_true')
+parser.add_argument("-c", "--co-author", help = "Add Co-Authored-By note to git commit")
 
 args = parser.parse_args()
 
@@ -182,6 +183,9 @@ class Patch:
             print(self.subject.replace('Subject: ', ''), file = log)
             print('', file = log)
             print(bodies, file = log)
+
+            if args.co_author:
+                print('\nCo-Authored-By: %s' % args.co_author, file=log)
 
         subprocess.check_output('git commit -a -F %s' % fullname, shell = True)
 

@@ -121,7 +121,7 @@ class Patch:
         lines = list(dropwhile(lambda x: not x.startswith('Subject:'), lines))
         self.parse_add_and_removed_files(lines)
 
-        subject_lines = list(takewhile(lambda x: x != '', lines))
+        subject_lines = list(takewhile(lambda x: x != '' and not x.startswith('MIME-'), lines))
         self.set_subject(subject_lines)
         lines = lines[len(subject_lines):]
 

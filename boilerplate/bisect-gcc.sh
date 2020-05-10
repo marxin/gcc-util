@@ -26,11 +26,11 @@ rm -rf $TMPDIR
 mkdir $TMPDIR
 cd $TMPDIR
 
-date
+echo "Starting: " `date`
 echo "Revision date: $DATE"
 $SOURCE/configure --enable-languages=c,c++,fortran --disable-bootstrap --disable-libsanitizer --target=$TARGET &>> $LOG || exit 255
 nice make -j`nproc` CXXFLAGS="-O0 -fpermissive" CFLAGS="-O0" all-host &>> $LOG || exit 125
-date
+echo "Done: " `date`
 
 $TMPDIR/gcc/xgcc -B$TMPDIR/gcc $SOURCEFILE $OPTIONS 2>&1 | grep "$GREP"
 

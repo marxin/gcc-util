@@ -7,6 +7,12 @@ SOURCEFILE="/home/marxin/Programming/testcases/pr94292.c"
 OPTIONS="-c -O -g -fno-tree-dce"
 GREP="internal compiler"
 
+TARGET="arm-linux-gnueabi"
+#TARGET="aarch64-linux-gnu"
+#TARGET="ppc64le-linux-gnu"
+#TARGET="ppc64-linux-gnu"
+#TARGET="s390x-linux-gnu"
+
 function clean {
   cd $SOURCE
   git checkout --force
@@ -22,7 +28,7 @@ cd $TMPDIR
 
 date
 echo "Revision date: $DATE"
-$SOURCE/configure --enable-languages=c,c++,fortran --disable-bootstrap --disable-libsanitizer --target=arm-linux-gnueabi &>> $LOG || exit 255
+$SOURCE/configure --enable-languages=c,c++,fortran --disable-bootstrap --disable-libsanitizer --target=$TARGET &>> $LOG || exit 255
 nice make -j`nproc` CXXFLAGS="-O0 -fpermissive" CFLAGS="-O0" all-host &>> $LOG || exit 125
 date
 

@@ -3,7 +3,7 @@
 TMPDIR=/dev/shm/gcc-objdir-bisect
 LOG=/tmp/gcc.log
 SOURCE=~/Programming/gcc2
-SOURCEFILE="/home/marxin/Programming/testcases/pr94292.c"
+SOURCEFILE="/home/marxin/Programming/gcc2/gcc/testsuite/gcc.dg/pr94292.c"
 OPTIONS="-c -O -g -fno-tree-dce"
 GREP="internal compiler"
 

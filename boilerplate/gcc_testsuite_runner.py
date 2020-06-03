@@ -56,7 +56,7 @@ class GccTester:
     def log(self, message, add_time = True):
         s = message
         if add_time:
-            d = str(datetime.datetime.now())
+            d = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             s = '[%s]: %s' % (d, message)
         print(s)
 

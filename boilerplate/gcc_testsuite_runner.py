@@ -17,27 +17,7 @@ from email.mime.multipart import MIMEMultipart
 class GccTesterError(Exception):
     pass
 
-ignored = ['guality/', 'gfortran.dg/ieee/large_2.f90', 'g++.dg/tls/thread_local-order2.C', 'Testcase exceeded maximum instruction count threshold']
-
-# temporary - hopefully
-ignored += ['index0-out.go', 'g++.dg/vect/slp-pr56812.cc', 'gcc.dg/simulate-thread/atomic-other-short.c', 'gcc.dg/sms-1.c', 'gcc.dg/vect/costmodel/ppc/costmodel-pr37194.c',
-        'gcc.dg/vect/no-section-anchors-vect-69.c', 'gcc.dg/vect/section-anchors-vect-69.c', 'gcc.dg/vect/slp-perm-9.c', 'gcc.dg/vect/vect-28.c', 'gcc.dg/vect/vect-33-big-array.c',
-        'gcc.dg/vect/vect-70.c', 'gcc.dg/vect/vect-87.c', 'gcc.dg/vect/vect-88.c', 'gcc.dg/vect/vect-91.c', 'gcc.dg/vect/vect-93.c',
-        'gcc.target/powerpc/bool3-p7.c', 'gcc.target/powerpc/bool3-p8.c', 'gfortran.dg/elemental_subroutine_3.f90', 'gfortran.dg/vect/vect-2.f90',
-        'gfortran.dg/vect/vect-3.f90', 'gfortran.dg/vect/vect-4.f90', 'gfortran.dg/vect/vect-5.f90', 'go.test/test/ken/cplx2.go',
-        'gcc.dg/ipa/iinline-attr.c', 'gcc.c-torture/execute/pr51581-1.c', 'gcc.c-torture/execute/pr51581-2.c', 'gcc.c-torture/execute/pr53645.c',
-        'gcc.dg/vect/pr51581-1.c', 'gcc.dg/vect/pr51581-2.c', 'gcc.dg/vect/pr51581-3.c', 'gcc.dg/vect/pr65947-14.c', 'gcc.dg/vect/pr65947-9.c', 'gcc.dg/pr21643.c',
-        'gcc.dg/tree-ssa/phi-opt-11.c', 'gcc.target/powerpc/builtins-1-p9-runnable.c', 'gcc.dg/pr56727-2.c', 'gcc.target/powerpc/loop_align.c', 'gcc.target/powerpc/mmx-packuswb-1.c',
-        'gcc.target/powerpc/pr79439.c', 'g++.dg/debug/debug9.C', 'gcc.target/i386/pr59501-3a.c', 'gcc.target/i386/pr70021.c', 'g++.dg/asan/asan_globals_test-wrapper.cc',
-        'g++.dg/asan/asan_globals_test.cc', 'g++.dg/asan/asan_oob_test.cc', 'g++.dg/asan/asan_test.cc', 'g++.dg/asan/asan_mem_test.cc', 'gcc.target/powerpc/float128-type-1.c',
-        'gcc.target/powerpc/pr82015.c', 'c-c++-common/goacc/kernels-double-reduction-n.c', 'c-c++-common/tsan/race_on_mutex.c', 'gcc.dg/torture/pr52451.c', 'checksyms',
-        'c-c++-common/Warray-bounds-4.c', 'g++.dg/lto/pr83121', 'gcc.target/powerpc/builtins-1-le.c', 'gcc.target/powerpc/pr84014.c', 'gcc.target/powerpc/vsx-vector-7.c',
-        'g++.dg/tree-ssa/pr19476-1.C', 'g++.dg/tree-ssa/pr19476-1.6', 'g++.dg/pr83239.C', 'g++.dg/lto/20091002-1', 'g++.dg/lto/pr64043', 'g++.dg/lto/pr65193', 'g++.dg/lto/pr65302',
-        'g++.dg/lto/pr65316', 'g++.dg/lto/pr65549', 'g++.dg/lto/pr65549', 'g++.dg/lto/pr66180', 'g++.dg/lto/pr66705', 'g++.dg/lto/pr68057', 'g++.dg/lto/pr68057', 'g++.dg/lto/pr68057',
-        'g++.dg/lto/pr68057', 'g++.dg/lto/pr69077', 'g++.dg/lto/pr69133', 'g++.dg/lto/pr69137', 'g++.dg/lto/pr79000', 'g++.dg/lto/pr81940', 'g++.dg/lto/pr85176',
-        'gcc.dg/strcmpopt_6.c', 'gcc.target/powerpc/builtins-1.c', 'gcc.target/powerpc/p8-vec-xl-xst-v2.c', 'gfortran.dg/lto/pr79108', 'g++.dg/pr80481.C', 'g++.dg/tree-ssa/pr19476-5.C',
-        'gcc.target/powerpc/vec-init-6.c', 'gcc.target/i386/pr80969-1.c', 'gdc.dg/lto/ltotests', 'call should have raised an exception', 'gcc.dg/Wstringop-overflow-17.c',
-        'g++.dg/cpp0x/std-layout1.C', 'g++.dg/pr80481.C']
+ignored = ['guality/']
 
 def tail(message):
   lines = message.split('\n')

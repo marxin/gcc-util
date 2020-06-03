@@ -21,7 +21,7 @@ ignored = ['guality/']
 
 def tail(message):
   lines = message.split('\n')
-  return '\n'.join(lines[-50:])
+  return '\n'.join(lines[-500:])
 
 class GccTester:
     def __init__(self, revision, options):
@@ -93,8 +93,11 @@ class GccTester:
         sender = 'mliska+tester@foxlink.cz'
         recipient = 'mliska@suse.cz'
 
-        subject = '%s: %s : ' % (self.original_revision, 'FAILURE' if failure else 'SUCCESS')
-        if not failure:
+        revision = self.original_revision.split('/')[-1]
+        subject = '%s: ' % revision
+        if failure:
+            subject += 'FAILURE'
+        else:
             subject += 'ALL TEST PASSED' if failed_tests == 0 else '%d TESTS FAILED' % failed_tests
 
         msg['Subject'] = subject

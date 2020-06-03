@@ -94,11 +94,9 @@ class GccTester:
         recipient = 'mliska@suse.cz'
 
         revision = self.original_revision.split('/')[-1]
-        subject = '%s: ' % revision
-        if failure:
-            subject += 'FAILURE'
-        else:
-            subject += 'ALL TEST PASSED' if failed_tests == 0 else '%d TESTS FAILED' % failed_tests
+        subject = '%s: %s' % (revision, 'FAILURE' if failure else 'SUCCESS')
+        if not failure and failed_tests:
+            subject += ' (%d tests failed)' % failed_tests
 
         msg['Subject'] = subject
         msg['From'] = sender
